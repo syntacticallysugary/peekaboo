@@ -1,0 +1,37 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: peekaboo-mqtt
+    restart: unless-stopped
+    # Host network so the loopback (1883) listener is reachable by the
+    # command-module (also host-network), while 8883/TLS is exposed to the LAN.
+    network_mode: host
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+  command-module:
+    build: ./command-module
+    container_name: peekaboo-command
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-sa.json
+      MQTT_BROKER_HOST: 127.0.0.1
+      MQTT_BROKER_PORT: "1883"
+      MQTT_USERNAME: command-module
+      MQTT_PASSWORD: ${MQTT_COMMAND_PASSWORD:-}
+      INFERENCE_NODE_URL: ${INFERENCE_NODE_URL:-http://localhost:8001}
+      CAMERA_HEARTBEAT_TIMEOUT_S: 360
+      RECORDINGS_PATH: /data/recordings
+      PORT: 8081
+    depends_on:
+      mqtt:
+        condition: service_started
+    volumes:
+      - ./data/recordings:/data/recordings
+      - ./data/firmware:/data/firmware
+      - ${GCP_SA_KEY_PATH:-/dev/null}:/secrets/gcp-sa.json:ro

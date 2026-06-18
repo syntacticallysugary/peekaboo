@@ -1,0 +1,22 @@
+FROM nvcr.io/nvidia/l4t-ml:r36.2.0-py3
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 freeze | grep -E "^(onnxruntime|opencv|numpy)" \
+    | sed 's/==/>=/' > /tmp/nvidia_pins.txt
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --constraint /tmp/nvidia_pins.txt -r requirements.txt
+
+COPY src/ /app/src/
+
+ENV PYTHONPATH=/app/src
+ENV MALLOC_ARENA_MAX=2
+
+EXPOSE 8002
+
+CMD ["python3", "src/main.py"]

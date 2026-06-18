@@ -1,0 +1,63 @@
+services:
+  person-detector:
+    build:
+      context: ./person-detector
+      dockerfile: Dockerfile.jetson
+    container_name: peekaboo-person-detector
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    runtime: nvidia
+    environment:
+      - LOG_LEVEL=info
+    volumes:
+      - ./models:/models
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "1"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  inference:
+    build:
+      context: .
+      dockerfile: Dockerfile.jetson
+    container_name: peekaboo-inference
+    restart: unless-stopped
+    depends_on:
+      person-detector:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    runtime: nvidia
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8001
+      - LOG_LEVEL=info
+      - MODEL_PACK=buffalo_l
+      - GPU_ID=0
+      - DET_SIZE=640
+      - RECOGNITION_THRESHOLD=0.55
+      - COMMAND_MODULE_URL=${COMMAND_MODULE_URL:?COMMAND_MODULE_URL must be set in .env}
+      - ROTATE_CAMERAS=xiao-01
+      - RECORDINGS_DIR=/recordings
+      - RETENTION_DAYS=7
+      - PERSON_DETECTOR_URL=http://person-detector:8002
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "1"
+    volumes:
+      - ./models:/root/.insightface/models
+      - ./data:/app/data
+      - ./recordings:/recordings
+
+volumes:
+  models:

@@ -1,0 +1,50 @@
+# Use NVIDIA L4T ML base image (JetPack 6.0 / L4T R36.2.0)
+# This image includes CUDA, cuDNN, TensorRT, and OpenCV pre-installed
+FROM nvcr.io/nvidia/l4t-ml:r36.2.0-py3
+
+WORKDIR /app
+
+# Install system dependencies for build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-pip \
+    python3-dev \
+    libgl1 \
+    libglib2.0-0 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Freeze NVIDIA-optimized packages so pip cannot downgrade or replace them.
+# The l4t-ml image ships onnxruntime-gpu and opencv built against the Jetson
+# BSP; any generic PyPI replacement will corrupt the heap at runtime.
+RUN pip3 freeze | grep -E "^(onnxruntime|opencv|numpy)" \
+    | sed 's/==/>=/' > /tmp/nvidia_pins.txt
+
+# Install pure-Python web stack normally (starlette etc. are transitive deps
+# that are safe to pull from PyPI — they have no native components).
+COPY requirements-jetson.txt .
+RUN pip3 install --no-cache-dir --constraint /tmp/nvidia_pins.txt -r requirements-jetson.txt
+
+# Install insightface WITHOUT deps — its declared deps would pull generic
+# onnxruntime and opencv wheels that corrupt the NVIDIA-optimized versions.
+RUN pip3 install --no-cache-dir --no-deps --constraint /tmp/nvidia_pins.txt insightface==0.7.3
+
+# Create directory for models
+RUN mkdir -p /root/.insightface/models
+
+# Copy source code
+COPY src/ /app/src/
+
+# Set environment variables
+ENV PYTHONPATH=/app/src
+ENV MODEL_PACK=buffalo_l
+ENV GPU_ID=0
+ENV LOG_LEVEL=info
+
+# Use the system malloc (glibc) rather than any arena-heavy allocator;
+# this reduces contiguous-block fragmentation on the Tegra memory mapper.
+ENV MALLOC_ARENA_MAX=2
+
+EXPOSE 8001
+
+CMD ["python3", "src/main.py"]

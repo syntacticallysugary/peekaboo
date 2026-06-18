@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/components/StatusBadge.tsx","./src/hooks/useWebSocket.ts","./src/pages/Dashboard.tsx","./src/pages/Events.tsx","./src/pages/Persons.tsx"],"version":"5.8.3"}

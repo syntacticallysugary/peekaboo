@@ -1,0 +1,40 @@
+# ESP32-CAM sdkconfig defaults (AI Thinker module — LX6 dual-core, 4MB flash, 4MB QSPI PSRAM)
+# Flash & PSRAM
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_s3eye.csv"
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384
+
+# Console on UART0 (no native USB on ESP32-CAM)
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+
+# Camera
+CONFIG_CAMERA_TASK_STACK_SIZE=8192
+
+# WiFi
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=4
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=8
+
+# TCP — default 5760-byte send buffer causes 15+ round-trips per frame POST
+# (base64 JPEG ~80-107 KB), each waiting for Linux delayed-ACK (~40-200 ms).
+# 65535 fits the entire payload in one burst → ~80 ms instead of ~4 s.
+CONFIG_LWIP_TCP_SND_BUF_DEFAULT=65535
+CONFIG_LWIP_TCP_WND_DEFAULT=65535
+
+# FreeRTOS
+CONFIG_FREERTOS_HZ=1000
+
+# HTTP client
+CONFIG_ESP_HTTP_CLIENT_ENABLE_BASIC_AUTH=y
+
+# mbedTLS — base64 for frame encoding, TLS for MQTT
+CONFIG_MBEDTLS_BASE64_C=y
+
+# Redirect pedestrian_detect model away from flash (component unused on ESP32)
+CONFIG_PEDESTRIAN_DETECT_MODEL_IN_SDCARD=y
+
+# Logging
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y

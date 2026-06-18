@@ -1,0 +1,48 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# PlatformIO
+camera/.pio/
+camera/.venv/
+
+# Environment
+.env
+*.local
+
+# MQTT secrets, runtime config, and broker state — generated per-deployment, never committed
+mosquitto/certs/
+mosquitto/config/passwd
+mosquitto/config/acl
+mosquitto/data/
+mosquitto/log/
+camera/certs/
+
+# Models (large binaries — download at runtime)
+inference-service/models/
+**/models/*.onnx
+**/models/*.engine
+
+# Recordings
+command-module/data/
+
+# Node
+node_modules/
+command-module/frontend/dist/
+
+# Personal planning notes — not for version control
+docs/IR-Camera.md
+docs/PUBLIC_RELEASE_PLAN.md
+status.md
+
+# Claude Code tool config — contains real host/IP references, not part of the project
+.claude/
+
+# Other AI tool / IDE config — contains real local paths, not part of the project
+.amazonq/
+.vscode/

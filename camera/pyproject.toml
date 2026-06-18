@@ -1,0 +1,8 @@
+[project]
+name = "pfig-camera"
+version = "0.1.0"
+description = "ESP32-S3-EYE and ESP32-CAM firmware for PFIG"
+requires-python = ">=3.10"
+dependencies = [
+    "platformio>=6.1.0",
+]

@@ -1,0 +1,18 @@
+# Use Python base image and install PlatformIO for isolated ESP32 development
+FROM python:3.10-slim
+
+# Install PlatformIO
+RUN pip install --no-cache-dir platformio
+
+# Install ESP32 platform
+RUN pio platform install espressif32
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy PlatformIO project files
+COPY platformio.ini ./
+COPY src/ ./src/
+
+# Default command: build the project
+CMD ["pio", "run"]

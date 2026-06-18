@@ -1,0 +1,4 @@
+.pio
+.vscode/
+credentials.h
+src/s3eye/credentials.h
