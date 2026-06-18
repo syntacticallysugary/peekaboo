@@ -38,7 +38,6 @@ static esp_err_t camera_init(void)
 
     // S3 OPI PSRAM: DMA mode is disabled, forcing an internal→PSRAM memcpy per
     // frame. 10 MHz gives enough time for that copy; 20 MHz overruns (EV-VSYNC-OVF).
-    // ESP32-CAM uses QSPI PSRAM with standard DMA — 20 MHz is fine there.
     cfg.xclk_freq_hz = CAM_XCLK_HZ;
     cfg.ledc_timer   = LEDC_TIMER_0;
     cfg.ledc_channel = LEDC_CHANNEL_0;

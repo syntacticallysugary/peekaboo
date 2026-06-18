@@ -10,6 +10,7 @@ build/
 # PlatformIO
 camera/.pio/
 camera/.venv/
+camera/sdkconfig.esp32cam.defaults
 
 # Environment
 .env
