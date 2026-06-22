@@ -38,3 +38,6 @@ CONFIG_PEDESTRIAN_DETECT_MODEL_IN_SDCARD=y
 
 # Logging
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# TFLite NN kernels: force portable ANSI C path to avoid StoreProhibited on PSRAM arena
+CONFIG_NN_ANSI_C=y
