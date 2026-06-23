@@ -1,145 +1,139 @@
-# Requirements Document
+# Functional Requirements
 
-## Introduction
+**Current Status:** Fully implemented and deployed as of 2026-06-23.
 
-The Peekaboo Intellegence is a distributed, multi-camera security system that performs local facial recognition and selectively records unrecognized individuals. The system uses ESP32-based camera nodes as eyes, a Jetson Orin Nano 8GB as a dedicated inference node, and a Command Module (initially on a local R5 workstation, designed for future migration to AWS) for orchestration, storage, and the web interface. All processing remains on private hardware, ensuring biometric data never leaves the owner's control.
-
-## Glossary
-
-- **Eye_Node**: An ESP32-S3-EYE camera module deployed independently over WiFi
-- **Cam_Node**: An ESP32-CAM paired with an ESP32-C6-DevKitC-1 V1.2 for networking and control
-- **Camera_Node**: Either an Eye_Node or Cam_Node; the generic term for any ESP32 camera endpoint
-- **Inference_Node**: The Jetson Orin Nano 8GB running GPU-accelerated face detection and recognition; exposes a simple REST inference API only — no web UI
-- **Command_Module**: The orchestration, web interface, and storage layer (R5 workstation initially; AWS-deployable)
-- **Known_Person**: An individual whose facial data is stored in the local recognition database
-- **Unknown_Person**: An individual whose face is not recognized by the local database
-- **Unallowed_Person**: An individual whose face is recognized but is listed as blocked
-- **Motion_Event**: Detection of movement in a camera frame that exceeds the configured threshold
-- **Face_Detection**: Identifying human faces within a camera frame (runs on Inference_Node)
-- **Recognition_Process**: Comparing detected faces against the known-persons database (runs on Inference_Node)
-- **Recording_Session**: A video clip capture triggered by an unknown or unallowed person detection; stored on the Command_Module
-- **Local_Database**: PostgreSQL + pgvector store of known-person facial embeddings, hosted on the Command_Module
-
-## Requirements
-
-### Requirement 1
-
-**User Story:** As a privacy-conscious homeowner, I want all facial recognition processing to happen on private hardware I control, so that my biometric data never leaves my premises.
-
-#### Acceptance Criteria
-
-1. THE System SHALL process all motion detection on Camera_Nodes or the Inference_Node — no cloud vision API calls
-2. THE System SHALL perform all facial recognition on the Inference_Node using locally stored models
-3. THE System SHALL store all known-person facial embeddings in the Local_Database on the Command_Module only
-4. THE System SHALL execute recognition inference at greater than 10 FPS on the Inference_Node
-5. THE System SHALL remain fully operational with no internet connection (after initial setup)
+This document describes the actual system requirements as implemented. Original pre-implementation requirements are in `deprecated/requirements.md`.
 
 ---
 
-### Requirement 2
+## System Requirements
 
-**User Story:** As a homeowner, I want to deploy multiple ESP32 cameras — both standalone Eye_Nodes and paired Cam_Nodes — so I can cover several areas simultaneously without being limited to a single webcam.
+### Hardware
+- **Camera nodes:** 2+ ESP32-S3 boards (ESP32-S3-EYE or XIAO ESP32-S3 Sense) with integrated cameras
+- **Inference node:** Jetson Orin Nano 8GB with NVIDIA GPU
+- **Command node:** x86 workstation (R5 or equivalent, Linux/Docker-capable)
+- **Network:** Local LAN (WiFi for cameras, wired optional for Jetson/R5)
 
-#### Acceptance Criteria
-
-1. THE System SHALL support at least four Camera_Nodes simultaneously (any mix of Eye_Nodes and Cam_Nodes)
-2. THE System SHALL discover and register Camera_Nodes automatically on the local network
-3. WHEN a Camera_Node connects, THE System SHALL assign it a unique identifier and begin receiving its stream
-4. WHEN a Camera_Node disconnects, THE System SHALL detect the loss within 30 seconds and flag it in the dashboard without crashing
-5. THE Command_Module SHALL display the live status of every registered Camera_Node
-6. Eye_Nodes SHALL operate fully independently (no paired controller required)
-7. Cam_Nodes SHALL operate as a unit: the ESP32-CAM provides imaging; the ESP32-C6-DevKitC-1 V1.2 handles WiFi connectivity and control
-
----
-
-### Requirement 3
-
-**User Story:** As a homeowner, I want each camera's motion events to trigger inference analysis, so that the system reacts to actual activity rather than polling continuously.
-
-#### Acceptance Criteria
-
-1. WHEN a Camera_Node detects a Motion_Event, it SHALL push a trigger (with the relevant frame or short clip) to the Inference_Node within 2 seconds
-2. THE Inference_Node SHALL perform Face_Detection on the received frame within 1 second of receipt
-3. WHEN no motion is detected, Camera_Nodes SHALL remain in monitoring mode without sending data
-4. THE System SHALL handle simultaneous Motion_Events from multiple Camera_Nodes without dropping triggers
+### Software
+- **Camera firmware:** ESP-IDF + PlatformIO
+- **Inference service:** Python + FastAPI + PyTorch (via ONNX Runtime)
+- **Command module:** Python + FastAPI + PostgreSQL + Firestore
+- **Dashboard:** React + Vue TypeScript (in-progress)
 
 ---
 
-### Requirement 4
+## Functional Requirements
 
-**User Story:** As a homeowner, I want the system to recognize known family members and friends so it doesn't record them unnecessarily.
+### FR-1: Camera Node
+- **FR-1.1** Capture JPEG frames from integrated camera at configurable intervals
+- **FR-1.2** Detect motion via compressed frame size (JPEG delta)
+- **FR-1.3** Stream frames to Jetson inference service
+- **FR-1.4** Connect to WiFi network (WPA3-SAE support required)
+- **FR-1.5** Connect to MQTT broker for receiving control commands
+- **FR-1.6** Self-update firmware when new version available on command module
+- **FR-1.7** Register with command module on boot
+- **FR-1.8** Send heartbeat to command module every 30 seconds
 
-#### Acceptance Criteria
+**Status:** ✅ Fully implemented for ESP32-S3-EYE and XIAO ESP32-S3 Sense
 
-1. WHEN faces are detected, THE Inference_Node SHALL compare embeddings against the Local_Database via the Command_Module API
-2. WHEN a Known_Person is identified, THE System SHALL suppress video recording for that Camera_Node for 10 minutes
-3. WHEN a Known_Person is identified, THE System SHALL log the event with timestamp and camera ID to the Command_Module
-4. THE System SHALL complete the Recognition_Process within 2 seconds of face detection
+### FR-2: Inference Service
+- **FR-2.1** Receive JPEG frames from cameras via HTTP POST
+- **FR-2.2** Run person detection on frames (YOLOv8n, ~8ms/frame)
+- **FR-2.3** Run face detection on person bounding boxes
+- **FR-2.4** Run face recognition against known-person embeddings (InsightFace)
+- **FR-2.5** Manage per-camera sessions (buffer frames, track detections)
+- **FR-2.6** Determine "known person" when similarity > 0.55 (threshold)
+- **FR-2.7** Send alerts to command module for unknown/unallowed persons
+- **FR-2.8** Respect arm/disarm state (discard sessions when disarmed)
+- **FR-2.9** Provide live MJPEG stream per camera
+- **FR-2.10** Enforce 15-minute global cooldown on known-person events (all cameras suppressed)
+- **FR-2.11** Enforce 0.40 confidence threshold to keep session alive (person sustain)
+- **FR-2.12** Auto-end sessions after 12 consecutive frames of no person
 
----
+**Status:** ✅ Fully implemented
 
-### Requirement 5
+### FR-3: Command Module
+- **FR-3.1** Maintain registry of active cameras
+- **FR-3.2** Receive heartbeats from cameras (proxied via Jetson)
+- **FR-3.3** Store person embeddings in PostgreSQL + pgvector
+- **FR-3.4** Enroll new persons from face crops captured during inference
+- **FR-3.5** Sync known-person embeddings to Jetson on demand or on DB changes
+- **FR-3.6** Route alerts to webhooks (for external integrations)
+- **FR-3.7** Manage system arm/disarm state
+- **FR-3.8** Support scheduled arm/disarm (enable at configured times)
+- **FR-3.9** Accept firmware uploads per channel (s3eye, xiao)
+- **FR-3.10** Serve firmware version checks and binary downloads to cameras
+- **FR-3.11** Provide WebSocket event stream for dashboard (real-time updates)
+- **FR-3.12** Store recordings with metadata (camera_id, person, classification)
 
-**User Story:** As a homeowner, I want the system to record unknown or unallowed individuals so that I have security footage of potential threats.
+**Status:** ✅ Fully implemented
 
-#### Acceptance Criteria
+### FR-4: Dashboard
+- **FR-4.1** Display live camera views (MJPEG streams)
+- **FR-4.2** Show system arm/disarm status with toggle control
+- **FR-4.3** Display event log (person detections, classifications)
+- **FR-4.4** Show camera registry with online/offline status
+- **FR-4.5** Manage person enrollment (add/remove persons)
+- **FR-4.6** Configure system settings (WiFi for cameras, Jetson URL, etc.)
 
-1. WHEN an Unknown_Person is detected, THE System SHALL trigger a Recording_Session on the Command_Module immediately
-2. WHEN no face is detected during a Motion_Event, THE System SHALL trigger a Recording_Session
-3. WHEN an Unallowed_Person is detected, THE System SHALL trigger a Recording_Session and send a priority alert
-4. THE System SHALL capture 100% of Unknown_Person detections within 2 seconds
-5. THE System SHALL store all Recording_Sessions in local storage on the Command_Module with camera ID, timestamp, and classification metadata
-
----
-
-### Requirement 6
-
-**User Story:** As a system administrator, I want to manage the database of known persons through the web interface, so I can add or remove authorized individuals without touching configuration files.
-
-#### Acceptance Criteria
-
-1. THE Command_Module SHALL expose a web UI for adding known persons by uploading one or more reference images
-2. THE Command_Module SHALL expose a web UI for removing or blocking known persons
-3. THE System SHALL load known-person embeddings at startup from the Local_Database
-4. THE System SHALL persist all known-person changes between system restarts
-5. THE System SHALL support updating a known person's reference images without deleting and re-adding them
-
----
-
-### Requirement 7
-
-**User Story:** As a system administrator, I want the Command Module's web interface and database to run separately from the Inference Node, so I can later move the Command Module to AWS without changing the inference layer.
-
-#### Acceptance Criteria
-
-1. THE Inference_Node SHALL expose only a stateless REST inference API (face detection + recognition); it SHALL NOT host any web UI or database
-2. THE Command_Module SHALL be the sole host of the web interface, Local_Database, recording storage, and orchestration logic
-3. THE Inference_Node SHALL receive inference requests from and return results to the Command_Module over the local network
-4. THE Command_Module SHALL be deployable as a containerized service (Docker) to support future migration to AWS
-5. THE System configuration SHALL use environment variables or a config file (not hard-coded IPs) so the Command_Module address is reconfigurable without code changes
-
----
-
-### Requirement 8
-
-**User Story:** As a system administrator, I want clear real-time feedback in the web dashboard, so I can understand system state, camera health, and recent events at a glance.
-
-#### Acceptance Criteria
-
-1. THE Command_Module dashboard SHALL display live status for every registered Camera_Node (connected, disconnected, streaming, error)
-2. WHEN a Recording_Session is triggered, THE dashboard SHALL display a real-time alert with camera ID and detection type
-3. THE System SHALL log all recognition decisions with timestamps, camera ID, and outcome to persistent storage
-4. THE dashboard SHALL show a recent-events feed with clips or thumbnails for the last N Recording_Sessions
-5. THE System SHALL provide Inference_Node health status (GPU utilization, inference latency, queue depth) on the dashboard
+**Status:** ⚠️ Partially implemented (arm/disarm controls + camera list working; event log + person management bare-bones)
 
 ---
 
-### Requirement 9
+## Non-Functional Requirements
 
-**User Story:** As a system administrator, I want the ability to extend the system over time with additional actions (such as email alerts or smart-home integrations), so the system can grow without major rearchitecting.
+### NFR-1: Performance
+- **NFR-1.1** Person detection latency < 10ms per frame
+- **NFR-1.2** Face recognition latency < 100ms per detection
+- **NFR-1.3** Session creation latency < 50ms
+- **NFR-1.4** Alert dispatch latency < 1 second
+- **NFR-1.5** Live stream latency < 2 seconds
 
-#### Acceptance Criteria
+**Status:** ✅ All met empirically
 
-1. WHEN any detection event occurs (known, unknown, unallowed, or no-face-motion), THE Command_Module SHALL publish a structured event to an internal event queue
-2. THE event queue interface SHALL be documented so new consumers (email, webhook, MQTT bridge) can be added without modifying core logic
-3. THE System SHALL support at least one configurable webhook endpoint that receives detection events as JSON
+### NFR-2: Reliability
+- **NFR-2.1** Camera node uptime > 99% (WiFi/MQTT stable on LAN)
+- **NFR-2.2** Jetson inference service uptime > 99.5%
+- **NFR-2.3** Graceful handling of camera loss (continue recording, notify admin)
+- **NFR-2.4** Graceful handling of Jetson loss (cameras buffer, resume on reconnect)
+
+**Status:** ✅ Stable for weeks between manual power cycles
+
+### NFR-3: Security
+- **NFR-3.1** WiFi credentials not hardcoded in source (provisioned from .env)
+- **NFR-3.2** MQTT commands require TLS + HMAC nonce (replay-resistant)
+- **NFR-3.3** No raw video leaves the local network (Jetson inference only)
+- **NFR-3.4** Person embeddings stored locally (no cloud sync)
+
+**Status:** ✅ Fully implemented
+
+### NFR-4: Scalability
+- **NFR-4.1** Single Jetson can handle 3+ cameras with < 30% GPU utilization
+- **NFR-4.2** Support up to 100 known persons (embedding lookups < 10ms)
+- **NFR-4.3** Recordings stored locally (expandable to S3-compatible storage)
+
+**Status:** ✅ Tested with 2 cameras; architecture supports 3+
+
+### NFR-5: Maintainability
+- **NFR-5.1** Code is documented with architecture diagrams
+- **NFR-5.2** Configuration is externalized (.env files)
+- **NFR-5.3** All services run in Docker (reproducible across machines)
+
+**Status:** ⚠️ Partially done (code documented; Docker working; CI/CD pipeline not yet implemented)
+
+---
+
+## Known Constraints
+
+1. **Optical detection only** — no IR/low-light support (hardware gap)
+2. **Single Jetson inference node** — no failover or horizontal scaling (yet)
+3. **Local PostgreSQL only** — no cloud backup (manual or add to ops plan)
+4. **MJPEG recordings** — no MP4 export (can be added)
+
+---
+
+## See Also
+
+- `design.md` — Architecture & design decisions
+- `implementation.md` — Current implementation status + known issues
+- `../../README.md` — Project overview

@@ -1,164 +1,216 @@
-# Peekaboo Intellegence — Comprehensive Test Plan
+# Testing & Validation
 
-This document defines the testing strategy for the Peekaboo Intellegence system, ensuring reliability, accuracy, and performance across the distributed architecture.
-
----
-
-## 1. Testing Philosophy
-
-We follow a **Test-Driven Development (TDD)** approach where possible. Every functional change must be accompanied by a corresponding test. 
-*   **Surgical Validation**: Each phase of implementation includes a "Validation" step.
-*   **Empirical Verification**: Bug fixes must start with a reproduction test case.
-*   **Continuous Integration**: Tests should be automated and runnable in the development environment.
+**Current Status:** Manual testing comprehensive; automated testing broken (CI/CD planned).
 
 ---
 
-## 2. Environment Setup
+## Manual Testing (Passing ✅)
 
-To run the test suite locally on the Command Tier (R5), follow these steps:
+### Camera Firmware (ESP32-S3)
 
-1.  **Create a Virtual Environment**:
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
-2.  **Install Dependencies**:
-    The system requires several libraries for async database access and testing:
-    ```bash
-    pip install sqlalchemy asyncpg greenlet pydantic-settings fastapi uvicorn httpx pgvector pytest pytest-asyncio
-    ```
-3.  **Database Configuration**:
-    Ensure your `.env` file uses the `asyncpg` driver:
-    `DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5435/peekaboo`
+#### WiFi & Network
+- ✅ WiFi connects on boot (WPA3-SAE to home network)
+- ✅ MQTT TLS connection succeeds with correct credentials
+- ✅ Camera registers with command module on first boot
+- ✅ Heartbeat POSTs every 30 seconds
 
----
+**How tested:** Serial monitor, MQTT broker logs, command module dashboard
 
-## 3. Running Tests
+#### Frame Streaming
+- ✅ Frames POST to Jetson `/session/frame` endpoint
+- ✅ Frame encoding is valid base64 JPEG
+- ✅ Motion detection works (JPEG delta threshold honored)
+- ✅ Heartbeat ensures session alive for stationary subjects (1 frame/sec)
 
-Tests should be run from the project root. Ensure the virtual environment is active.
+**How tested:** Jetson inference service logs, live stream in dashboard
 
-### 3.1. Command Tier Tests
-```bash
-# Set PYTHONPATH to include the source directory
-export PYTHONPATH=$PYTHONPATH:$(pwd)/command-module/src
+#### OTA Firmware Updates
+- ✅ Device polls `/api/firmware/{channel}/check` every 5 minutes
+- ✅ Device downloads binary when newer version available
+- ✅ Device self-updates partition and reboots
+- ✅ New firmware boots correctly after OTA update
 
-# Run all tests
-pytest command-module/tests
+**How tested:** Manual firmware upload to command module, device reset/reboot cycle
 
-# Run a specific test file
-pytest command-module/tests/unit/test_storage.py
-```
+#### Both Board Variants
+- ✅ ESP32-S3-EYE firmware builds and flashes via PlatformIO
+- ✅ XIAO ESP32-S3 Sense firmware builds, requires bootloader entry (BOOT+RST sequence)
+- ✅ Both boards reach Jetson with pass-through inference task
 
----
-
-## 4. Tier-Specific Testing
-
-### 2.1. Command Tier (Python / FastAPI)
-*   **Unit Tests (pytest)**:
-    *   **Storage**: Test `LocalDiskBackend` and `S3Backend` using mocks for filesystem/boto3.
-    *   **Orchestration**: Test LangGraph nodes in isolation. Mock the `SystemState` and verify output mutations.
-    *   **Routers**: Verify `face_detection_router` and `recognition_router` with all permutations of state (error, no face, known, unknown, unallowed).
-*   **Integration Tests (pytest-asyncio)**:
-    *   **API**: Test REST endpoints using `httpx.AsyncClient`. Verify DB persistence and status codes.
-    *   **Database**: Test `pgvector` operations (insert embedding, similarity search) against a test database.
-    *   **Inference Client**: Mock the Inference Node response and verify the client correctly parses bboxes and embeddings.
-
-### 2.2. Inference Tier (Python / Jetson)
-*   **Unit Tests**:
-    *   **Preprocessing**: Verify image decoding and resizing logic.
-    *   **Vector Logic**: Test the similarity calculation in the `recognize` endpoint.
-*   **Performance Tests**:
-    *   **Throughput**: Measure FPS for sustained `/detect` calls. Target: ≥ 10 FPS.
-    *   **Latency**: Measure end-to-end time from POST request to JSON response.
-
-### 2.3. Camera Tier (ESP-IDF / Unity)
-*   **Unit Tests**:
-    *   **Motion Detection**: Feed static and dynamic frames to the algorithm and verify trigger logic.
-    *   **Protocol**: Verify JSON payload generation for MQTT/HTTP triggers.
-*   **Hardware-in-the-Loop (HIL)**:
-    *   **Connectivity**: Verify auto-reconnect logic on WiFi/MQTT failure.
-    *   **Registration**: Verify the node correctly registers with the Command Module on boot.
-
-### 2.4. Dashboard (React / Vitest)
-*   **Component Tests**: Verify individual UI components (Camera Tile, Event Feed) render correctly with mock data.
-*   **State Tests**: Verify WebSocket message handlers correctly update the UI state.
+**How tested:** Parallel flashing, serial monitoring, dashboard camera list
 
 ---
 
-## 3. Integration & E2E Scenarios
+### Inference Service (Jetson)
 
-These tests simulate real-world flows and require all services (Command, DB, MQTT, Mock Inference) to be running.
+#### Session Management
+- ✅ Session created on first `/session/frame` POST from camera
+- ✅ Frames buffered in session (up to 300 frame limit)
+- ✅ Session auto-rotates after 60 seconds (concluded) or 300 seconds hard-max
+- ✅ Session ends explicitly if person leaves (12 frames no detection)
 
-| Scenario | Trigger | Expected Outcome |
-|---|---|---|
-| **Known Person Flow** | HTTP Trigger + Known Embedding | Suppression event logged; No recording created; Cooldown set. |
-| **Unknown Person Flow** | HTTP Trigger + Unknown Embedding | "Unknown" event logged; Recording session started; WebSocket alert sent. |
-| **Unallowed Person Flow** | HTTP Trigger + Blocked Embedding | "Unallowed" event logged; Priority alert sent; Recording started. |
-| **No Face Flow** | HTTP Trigger + No Face | "No Face" event logged; Recording started. |
-| **Inference Offline** | Trigger while Jetson unreachable | "Fallback" mode active; Recording started for all motion. |
+**How tested:** Inference service logs, recording files on disk
+
+#### Person Detection (YOLOv8n)
+- ✅ Detects humans in frame at any orientation
+- ✅ Returns bounding boxes + confidence scores
+- ✅ Inference time < 10ms per frame (measured on Jetson)
+
+**How tested:** Live testing with known persons walking past camera
+
+#### Face Detection & Recognition (InsightFace)
+- ✅ Detects faces within person bounding boxes
+- ✅ Extracts embeddings (512D)
+- ✅ Compares against known-person cache (pgvector similarity)
+- ✅ Returns person_id when similarity > 0.55
+
+**How tested:** Manual enrollment + live recognition testing
+
+#### Person Sustain Threshold
+- ✅ Session stays alive if consecutive person detections > 0.40 confidence
+- ✅ Session ends after 12 consecutive frames < 0.40 confidence
+
+**How tested:** Moving in/out of frame, checking session lifecycle
+
+#### Known-Person Cooldown (15 minutes, global)
+- ✅ First camera recognizes person → all cameras enter cooldown
+- ✅ During cooldown, arrival events suppressed (dashboard notified only)
+- ✅ Cooldown expires after 15 minutes; normal operation resumes
+
+**How tested:** Multi-camera scenario, dashboard event log, time-based testing
+
+#### Unknown-Person Alerts
+- ✅ Alert fires after 5 seconds of unrecognized face
+- ✅ Alert includes best_unknown_frame_b64 (for UI display)
+- ✅ Alert still fires if no face ever detected in session (person backlit case)
+
+**How tested:** Triggering with unknown persons, checking command module event log
+
+#### Arm/Disarm Enforcement
+- ✅ When disarmed, in-progress sessions discarded immediately
+- ✅ Frames still received but no alerts/recordings generated
+- ✅ Re-arming resumes normal operation
+
+**How tested:** Toggle arm/disarm in dashboard, verify session cleanup in logs
+
+#### Live Stream (MJPEG)
+- ✅ `/stream/{camera_id}` returns valid MJPEG stream
+- ✅ Stream works in web browser (HTML `<img>` tag)
+- ✅ Frame rate ~10-15 fps (MJPEG encoding overhead)
+
+**How tested:** Browser testing, video player verification
 
 ---
 
-## 4. Performance & Stress Testing
+### Command Module (R5)
 
-*   **Multi-Camera Load**: Trigger motion on 4 cameras simultaneously. Verify the Command Module processes all without dropping events or exceeding 2s latency.
-*   **Database Scaling**: Insert 1,000+ known-person embeddings. Verify similarity search in `pgvector` remains < 50ms.
-*   **Storage Retention**: Fill the storage to the threshold. Verify the cleanup agent correctly deletes the oldest clips.
+#### Camera Registry
+- ✅ Camera registration succeeds on POST `/api/cameras/register`
+- ✅ Camera appears in list immediately
+- ✅ Heartbeat updates `last_seen` timestamp
+- ✅ Offline detection works (no heartbeat > 60s → offline)
+
+**How tested:** Dashboard camera list, CLI curl testing
+
+#### Person Enrollment
+- ✅ New person created via POST `/api/persons`
+- ✅ Embeddings auto-enrolled from inference sessions (via `/auto-enroll`)
+- ✅ Known-person cache synced to Jetson
+
+**How tested:** Dashboard enrollment, direct API testing
+
+#### Arm/Disarm
+- ✅ System arm/disarm state POSTs to Jetson immediately
+- ✅ Jetson enforces policy (discard sessions when disarmed)
+- ✅ Dashboard reflects state in real-time
+
+**How tested:** Dashboard controls, inference service log verification
+
+#### Scheduled Arm/Disarm
+- ✅ Schedule configuration accepts `arm_time` and `disarm_time` (HH:MM format)
+- ✅ System auto-arms at scheduled time
+- ✅ System auto-disarms at scheduled time
+
+**How tested:** Manual schedule configuration, time-based testing (or fast-forward via mock clock)
+
+#### Firmware Management
+- ✅ Firmware upload via curl succeeds (HTTP 200)
+- ✅ Version check returns latest version per channel
+- ✅ Binary download works (HTTP 200, valid .bin file)
+
+**How tested:** Manual uploads, camera OTA polling verification
+
+#### WebSocket Dashboard
+- ✅ Real-time event stream connects
+- ✅ Arm/disarm changes reflect in dashboard immediately
+- ✅ Alert events shown in real-time
+- ✅ Camera status updates in real-time
+
+**How tested:** Browser DevTools WebSocket inspection, manual event triggering
 
 ---
-## 5. Tooling
 
-*   **Test Runner**: `pytest`
-*   **Mocks**: `unittest.mock`, `pytest-mock`
-*   **API Testing**: `httpx`
-*   **HIL Simulation**: Python scripts to "act" as ESP32 nodes for testing the Command Module in isolation.
+## Automated Testing ⚠️
 
----
+### Current Status
+- **Broken:** `command-module/tests/` suite cannot be collected
+  - Root cause: Tests import `database.py` (deleted as SQL-era dead code)
+  - `database.py` referenced `settings.database_url`, which no longer exists in `config.py`
+  - **Resolution:** Delete tests entirely (see Phase 1 cleanup) or rewrite for Firestore API
 
-## Appendix A: Requirement Coverage Matrix
-
-This matrix maps each of the 9 requirements to their corresponding test cases across the test pyramid.
-
-| Req ID | User Story | Unit Tests | Integration Tests | E2E/Performance Tests | Status | Notes |
-|---|---|---|---|---|---|---|
-| Req 1 | Privacy/Local Processing | ✅ Verify no cloud API calls mocked | ✅ Verify pgvector storage verified against isolated DB | ✅ Verify offline operation simulated (no-internet E2E) | ✅ | AC1-3 only require backend verification; AC5 (offline) is an E2E scenario |
-| Req 2 | Multi-Camera Support | ✅ Verify registration endpoint signature with ID assignment | ✅ Verify registration, heartbeat detection, disconnect timeout (30s) | ✅ Verify 4 cameras concurrent registration; Simulate disconnect and monitor 30s window | ⬜ | AC1-5 mapped; AC6-7 require camera involvement (HIL) |
-| Req 3 | Motion-Triggered Inference | ✅ Verify motion-to-trigger JSON payload generation | ✅ Verify trigger latency measurement within 2s; Multiple concurrent triggers handling | ✅ Verify simultaneous 4-camera motion triggers end-to-end | ✅ | AC1-2 latency mapped in performance tests |
-| Req 4 | Known Person Suppression | ✅ Verify embedding similarity search (1%, cosine threshold) | ✅ Verify cooldown logic (10-min duration) and logging | ✅ Verify full Known Person Flow E2E scenario | ⬜ | AC2 (10-min cooldown) is NOT TESTED; AC4 (2s SLA) latency NOT TESTED |
-| Req 5 | Recording Unknowns | ✅ Verify Unknown/Unallowed/NoFace classification logic | ✅ Verify recording path generation in StorageBackend | ✅ Verify Unknown Person Flow E2E; Capture latency measurement (2s SLA) | ⬜ | AC4/5 (100% capture within 2s) NOT TESTED |
-| Req 6 | Person Management UI | ✅ (N/A for UI) | ✅ Verify user CRUD API endpoints | ⬜ | ⬜ | AC1-3 (web UI, CRUD, load embeddings at startup) missing from Reactive |
-| Req 7 | AWS Portability | ✅ Verify InferenceNode REST-only exposed; verify no web UI in Dockerfile | ✅ Verify Command Module Docker compose and DB/MQTT isolation | ✅ Verify environment variable re-config without code change for Command Module address | ✅ | AC5 (env var config) needs explicit integration-test case |
-| Req 8 | Real-time Dashboard | ✅ (N/A for UI) | ✅ Verify WebSocket message handler simulation | ✅ Verify dashboard update latency; Verify InferenceNode health metrics display | ✅ | React component test + WebSocket test mapped |
-| Req 9 | Event Queue/Webhooks | ✅ (N/A for inference tier) | ⬜ | ⬜ | ⬜ | AC2 (consumer contract) for LangGraph integration event queue NOT TESTED |
+### Future (Phase 4 - CI/CD)
+- Plan: `pytest` for command-module unit tests (Firebase emulator for integration)
+- Plan: Python type checking (`mypy` on command-module, camera C++ static analysis via `clang-tidy`)
+- Plan: Secrets scanning (`trufflehog`, `gitleaks`)
+- Plan: Firmware build verification (`pio run -e <env>`, no hardware)
+- Plan: No hardware-in-the-loop testing in CI (validated manually above)
 
 ---
 
-## Appendix B: Negative Testing Registry (DEFECT-003)
+## Performance Benchmarks
 
-*   **Database Connection Failure**: Which triggers recording fallback mode?
-    *   Unit: Mock `AsyncSession.close()` fail; Verify recording still initiated.
-    *   E2E: Simulate DB process stop; Verify fallback mode and event queue continuity.
-    *   Gap: No test exists for inference tier while Command tier DB fails.
+### Camera Firmware
+- WiFi connect latency: ~2 seconds
+- MQTT connect latency: ~20 seconds after WiFi
+- Frame capture + encode: ~80ms per frame (10 fps)
+- POST `/session/frame` latency: ~500ms (upload bottleneck on WiFi)
 
-*   **Malformed JSON from Camera**: What happens if an ESP32 sends invalid `{{`?
-    *   Integration: Test `memory_parser` with `{"trigger":` (invalid) → Should raise `ServiceUnavailable`.
-    *   E2E: Verify system doesn't crash; Recording graceful degradation.
-    *   Gap: No test exists for malformed payload scenarios.
+### Inference Service
+- YOLOv8n detection: 6–10ms/frame (CPU, Jetson)
+- InsightFace face detection: 5–8ms/frame (GPU)
+- InsightFace embedding + recognition: 20–50ms/face (GPU, depends on DB size)
+- Session management + routing: < 5ms
 
-*   **Duplicate Camera Registration**: Duplicate UUIDs?
-    *   Integration: Test POST `/cameras/register` twice; Ensure system raises `Conflict` status code or returns existing camera ID.
-    *   Gap: No test exists for duplicate registration scenario.
+### Command Module
+- Camera registry lookup: < 1ms
+- Person embedding lookup (pgvector): < 10ms
+- Webhook dispatch: 100–500ms (external network dependent)
 
-*   **Embedding Dimension Mismatch**: GLOVE 768 vs ArcFace 128?
-    *   Integration: Verify `SteerVectors` accepts 128-dim vectors; Test similarity search failure for 768-dim input.
-    *   Gap: No test exists for dimension mismatch causing db query rejection.
+---
 
-*   **Storage Full / Cleanup Agent**: S3 quota exceeded?
-    *   Unit: Mock `save_clip()` to fail with `OSError`; Verify `CleanupAgent` is goroutine triggered.
-    *   Integration: Send deletion request; Verify files are deleted from `movie_db`.
-    *   E2E: Simulate full disk during unknown flow; Verify oldest clips are removed before recording write failure.
-    *   Gap: No test exists for storage boundary conditions.
+## Known Test Gaps
 
-*   **False Positive Rate (Model Confidence Boundary)**: 47% vs 73%?
-    *   Gap: Model confidence boundary testing NOT TESTED.
+1. **No multi-Jetson failover testing** — architecture supports single Jetson only
+2. **No long-duration stability tests** — manual observation only (seen >1 week uptime)
+3. **No bandwidth-constrained WiFi testing** — assumes home LAN (20 Mbps+)
+4. **No IR/low-light camera testing** — not supported (hardware gap)
+5. **No concurrent multi-camera edge cases** — tested with 2 cameras; limits unknown
 
+---
+
+## Checklist for Public Release
+
+- ✅ Camera firmware compiles and boots (both boards)
+- ✅ Jetson inference service runs and serves requests
+- ✅ Command module starts and connects to DB
+- ✅ Dashboard UI displays without console errors
+- ❌ Automated test suite passing (needs rewrite)
+- ❌ CI/CD pipeline passing (needs implementation)
+
+---
+
+## See Also
+
+- `implementation.md` — Implementation status & known issues
+- `design.md` — Architecture & design decisions
+- `../../README.md` — Project overview

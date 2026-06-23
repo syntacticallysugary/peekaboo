@@ -1,108 +1,147 @@
-# Peekaboo Intellegence — Implementation Roadmap
+# Implementation Status
 
-This document outlines the phased implementation plan for the Peekaboo Intellegence system, mapping the requirements and design into actionable development steps.
+**As of 2026-06-23** — Production-ready for a single Jetson + multiple cameras + local command module.
 
----
+## Implemented ✅
 
-## Phase 1: Environment & Infrastructure (Foundation)
+### Camera Firmware (ESP32-S3)
+- ✅ JPEG capture and motion detection (JPEG delta)
+- ✅ WiFi connectivity with WPA3-SAE support
+- ✅ MQTT TLS client for control commands
+- ✅ HTTP POST to Jetson `/session/frame` endpoint
+- ✅ Heartbeat (1 frame/sec to keep sessions alive)
+- ✅ OTA firmware updates (self-update via command module)
+- ✅ Per-device camera ID + firmware channel
+- ✅ Config provisioning from `.env` at build time
+- ✅ Both ESP32-S3-EYE and XIAO ESP32-S3 Sense boards supported
 
-Set up the core development environment and shared services that all tiers will rely on.
+### Inference Service (Jetson)
+- ✅ YOLOv8n person detection (CPU, ~8ms/frame)
+- ✅ InsightFace face detection + recognition (GPU, ~50ms/frame)
+- ✅ Session management (per-camera, auto-rotate)
+- ✅ Known-person cache (synced from command module)
+- ✅ Unknown-person alert after 5 seconds no-match
+- ✅ Unknown-person alert even if no face ever detected (intruder backlit case)
+- ✅ Person sustain threshold (0.40 confidence to keep session alive)
+- ✅ 15-minute global known-person cooldown (all cameras suppressed)
+- ✅ Arm/disarm state enforcement (Jetson immediately discards sessions)
+- ✅ MJPEG live stream per camera
+- ✅ Frame extraction (first frame of recording)
 
-1.  **Project Structure Setup**:
-    *   Initialize the monorepo structure as defined (already partially done).
-    *   Create `docker-compose.yml` for local development (Command Module, DB, MQTT).
-2.  **Database Layer**:
-    *   Set up PostgreSQL with the `pgvector` extension.
-    *   Apply the schema from `design.md`.
-    *   **Validation**: Verify extension and tables exist via `psql`.
-3.  **Shared Configuration**:
-    *   Define a centralized `.env.example` template.
+### Command Module (R5)
+- ✅ FastAPI REST API (port 8081)
+- ✅ Camera registry + heartbeat tracking
+- ✅ Person enrollment + embeddings database
+- ✅ Alert routing to external webhooks
+- ✅ System arm/disarm + scheduled arm/disarm
+- ✅ Firmware upload + version management
+- ✅ WebSocket dashboard (real-time event stream)
+- ✅ LangGraph orchestration (alert → webhook dispatch path)
 
-## Phase 2: Inference Tier Development (Jetson Orin Nano)
-
-Develop the stateless REST API for face detection and recognition.
-
-1.  **Model Preparation**:
-    *   Select and export YOLOv8-face and ArcFace/AdaFace to TensorRT engines.
-2.  **Inference Service (FastAPI)**:
-    *   Implement `/detect`, `/recognize`, and `/health` endpoints.
-    *   **Unit Testing**: Test vector similarity logic and image decoding in isolation.
-3.  **Containerization & Deployment**:
-    *   Create `Dockerfile.jetson`.
-    *   Deploy to physical hardware (Jetson Nano).
-    *   **Validation**: Verify `/health` endpoint and run a sample `/detect` with a static image.
-    *   **Performance Benchmarking**: Verify ≥ 10 FPS throughput.
-
-## Phase 3: Command Tier Core & Storage
-
-Build the backbone of the Command Module.
-
-1.  **Storage Abstraction**:
-    *   Implement `StorageBackend` (Local/S3).
-    *   **Unit Testing**: Verify `save_clip`, `get_clip_url`, and `delete_clip` with mocks.
-2.  **Camera Registry Service**:
-    *   Implement background monitoring and heartbeat logic.
-    *   **Integration Testing**: Verify camera registration and disconnect detection (30s timeout) via DB state checks.
-3.  **Person Management API**:
-    *   Build CRUD endpoints and enrollment flow.
-    *   **Integration Testing**: Verify image upload → inference call → `pgvector` storage chain.
-
-## Phase 4: Orchestration Layer (LangGraph)
-
-Implement the "Brain" of the system using LangGraph.
-
-1.  **Workflow & Routing**:
-    *   Implement nodes and conditional routers.
-    *   **Unit Testing**: Verify each node's state mutations using mock `SystemState`.
-    *   **Scenario Testing**: Execute the graph with mock triggers (Known, Unknown, No-Face) and verify the final `classification` and `recording_path`.
-2.  **Event Bus & Webhooks**:
-    *   Integrate event queue and dispatcher.
-    *   **Validation**: Verify webhook delivery on detection events.
-
-## Phase 5: Camera Tier (ESP32 Nodes)
-
-Firmware development for the "Eyes" of the system.
-
-1.  **Common Camera Core**:
-    *   Implement WiFi, MJPEG, and motion detection.
-    *   **Unit Testing**: Verify motion detection algorithm with sample frame buffers.
-2.  **HIL Testing**:
-    *   **Registration**: Verify node POSTs to `/api/cameras/register` on boot.
-    *   **Triggering**: Verify node sends motion trigger and face crop on actual movement.
-
-## Phase 6: Web Dashboard (React)
-
-Create the user interface for monitoring and management.
-
-1.  **Implementation**:
-    *   Build grid view, event feed, and management views.
-2.  **Validation**:
-    *   **Component Testing**: Test UI components with mock API data.
-    *   **Real-time Testing**: Verify dashboard updates instantly when a mock detection event is published to WebSockets.
-
-## Phase 7: System Integration & E2E Validation
-
-Full-system verification.
-
-1.  **End-to-End (E2E) Scenarios**:
-    *   Run all E2E scenarios defined in `testing.md`.
-    *   Verify latency (Motion → Recording start) is ≤ 2 seconds.
-2.  **Stress Testing**:
-    *   Simulate 4+ cameras triggering simultaneously.
-    *   Verify system stability under sustained motion.
+### Hardware
+- ✅ ESP32-S3-EYE board working + deployed
+- ✅ XIAO ESP32-S3 Sense working + deployed
+- ✅ Jetson Orin Nano 8GB (GPU for face recognition)
+- ✅ R5 workstation (command module host)
 
 ---
 
-## Mapping Requirements to Phases
+## Partially Implemented ⚠️
 
-| Requirement | Description | Primary Phase |
-|---|---|---|
-| Req 1 | Privacy/Local Processing | Phase 2, 3 |
-| Req 2 | Multi-Camera Support | Phase 5, 3 |
-| Req 3 | Motion-Triggered Inference | Phase 5, 4 |
-| Req 4 | Known Person Suppression | Phase 4 |
-| Req 5 | Recording Unknowns | Phase 4, 3 |
-| Req 6 | Person Management UI | Phase 3, 6 |
-| Req 7 | AWS Portability | Phase 3, 8 |
-| Req 8 | Real-time Dashboard | Phase 6 |
-| Req 9 | Event Queue/Webhooks | Phase 4 |
+### Recording & Storage
+- ✅ MJPEG encoding per-session
+- ✅ Recording uploaded to command module
+- ✅ Webhook dispatch on alerts
+- ⚠️ S3-compatible object store abstraction (code exists but not tested beyond local disk)
+- ⚠️ Recording retention policy (configured but not enforced at scale)
+
+### Dashboard (React frontend)
+- ✅ Arm/disarm controls
+- ✅ Camera list + live view (snapshot)
+- ⚠️ Event log (created but not fully connected)
+- ⚠️ Person management UI (bare bones)
+- ⚠️ Settings page layout (exists but not fully wired)
+
+---
+
+## Not Yet Implemented ❌
+
+### Features
+- ❌ Cross-camera person tracking (embedding correlations shown in UI)
+- ❌ Motion-only recording mode (all recording tied to face/arm state)
+- ❌ Facial recognition confidence threshold UI adjustment
+- ❌ IR/low-light board support
+- ❌ Multi-zone motion masking
+- ❌ Export recordings as MP4 (MJPEG stored internally)
+
+### Operational
+- ❌ Automated backup of PostgreSQL + recordings
+- ❌ Camera firmware rollback
+- ❌ Analytics dashboard (heatmaps, person frequency, etc.)
+- ❌ Per-person notification preferences
+- ❌ Bluetooth or local-user enrollment (enrollment via live face crop only)
+
+### Monitoring
+- ❌ Alerting on Jetson/command module outage
+- ❌ Disk space monitoring + low-space alerts
+- ❌ Person detection false-positive rate metrics
+- ❌ WiFi signal strength tracking per camera
+
+---
+
+## Known Issues & Workarounds
+
+### XIAO ESP32-S3 Hardware
+- **No visible BOOT/RST buttons** — tiny pads near USB-C end. Bootloader entry requires finding them by feel or measuring continuity.
+- **Workaround:** See `../../camera/README.md` "XIAO bootloader entry" section.
+
+### TFLite linking (XIAO)
+- **Issue:** CMakeLists.txt links `esp-tflite-micro` for all XIAO builds (even pass-through firmware).
+- **Root cause:** TFLite ONNX assembly kernels attempt PSRAM writes; ESP32-S3 PIE only allows internal SRAM writes.
+- **Fix:** `CONFIG_NN_ANSI_C=y` in `sdkconfig.xiao_peekaboo.defaults` (portable C kernels).
+- **Permanent:** This fix must stay in the config; removing it causes StoreProhibited crashes.
+
+### Person detector threshold tuning
+- **Issue:** Original 0.35 threshold led to ~1 false positive per 2-3 minutes on empty space.
+- **Fix:** Raised to 0.55 (2026-06-23). Empty-space scores cluster 0.38-0.45; known good detections are 0.55+.
+- **Trade-off:** May miss distant/partially-obscured persons. Empirically tested and acceptable for home surveillance.
+
+### OTA data partition
+- **Issue:** Device was booting from old OTA partition (ota_1) instead of new flash (ota_0).
+- **Cause:** `ota_data_initial.bin` didn't reset partition pointer on flash.
+- **Fix:** Bumped firmware version (1.1.0 → 2.1.0) to supersede old version served by command module. Now all cameras boot new firmware on next OTA check.
+
+---
+
+## Testing
+
+### Manual testing (in progress)
+- ✅ WiFi connectivity + MQTT control on both camera boards
+- ✅ Frame streaming to Jetson (all cameras online in ~15 sec)
+- ✅ Person detection + face recognition on known persons
+- ✅ Unknown-person alert after 5 seconds no-match
+- ✅ 15-minute global cooldown on known-person recognition
+- ✅ Arm/disarm enforcement (sessions discarded immediately)
+- ✅ OTA firmware update (device self-updates + reboots)
+
+### Automated testing
+- ⚠️ Python pytest suite exists but broken (references deleted SQL-era database.py)
+- ⚠️ No CI/CD pipeline yet (design planned, implementation blocked)
+
+---
+
+## Migration Path (if AWS deployment planned)
+
+1. **Jetson inference service:** Can move to AWS EC2 GPU instance (same Docker image)
+2. **Command module:** Already uses Firestore for data (AWS-compatible via `storage/` abstraction)
+3. **Cameras:** No changes needed (HTTP/MQTT endpoints configurable at build time)
+4. **Blockers:** No automated backup of recordings to S3 yet; manual copy required
+
+---
+
+## See Also
+
+- `design.md` — Architecture and design decisions
+- `requirements.md` — Original requirements (pre-implementation)
+- `../../camera/README.md` — Firmware build/flash procedures
+- `../README.md` — Project overview
