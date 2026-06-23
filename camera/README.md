@@ -1,263 +1,226 @@
-# Peak-a-Boo Hub
+# Peekaboo Intelligence — Camera Firmware
 
-A secure video surveillance system hub built with FastAPI. This service receives JPEG frames from ESP32-CAM devices and streams them as MJPEG to web clients.
+ESP32-S3 firmware for streaming JPEG frames to the Jetson inference node. Cameras run pass-through detection: frame capture → JPEG encoding → HTTP POST to Jetson. All person detection and face recognition runs on the Jetson; the camera is a thin client.
 
-## Features
+## Supported Boards
 
-- **Secure Upload**: ESP32-CAM devices upload frames via HTTP POST with PSK authentication
-- **In-Memory Storage**: Frames are stored in RAM only (no disk I/O)
-- **MJPEG Streaming**: Real-time video streams for web browsers
-- **Async Processing**: Non-blocking distribution using Python asyncio
+| Board | PlatformIO env | USB Device | Flash Size | PSRAM | Notes |
+|-------|---|---|---|---|---|
+| ESP32-S3-EYE | `esp32s3eye` | `/dev/s3eye` | 8MB | 8MB OPI | Integrated OV2640 camera |
+| XIAO ESP32-S3 Sense | `xiao_s3_01` | `/dev/ttyACM0` | 8MB | 8MB OPI | Integrated OV3660 camera; no visible BOOT/RST buttons |
 
 ## Prerequisites
 
-- Python 3.10+ in a conda environment named 'camera'
-- Required packages: fastapi, uvicorn, opencv, python-multipart
+- [PlatformIO CLI](https://platformio.org/install/cli) (`pip install platformio`)
+- One or more supported boards connected via USB
+- Jetson inference service running on `192.168.1.108:8001`
+- Command module running on `192.168.1.105:8081`
 
-## Installation
+## Quick Start
 
-The environment and packages are already set up. If needed, activate the environment:
+### 1. Configure environment
 
-```bash
-conda activate camera
-```
-
-## Running the Hub
-
-Start the server:
+Create a `.env` file at the repo root with your network credentials:
 
 ```bash
-python main.py
+WIFI_SSID=your-network-name
+WIFI_PASSWORD=your-password
+MQTT_BROKER_HOST=192.168.1.105
+MQTT_PASSWORD=your-mqtt-password
 ```
 
-Or with uvicorn directly:
+These are baked into the firmware at build time via build flags in `platformio.ini`.
+
+### 2. Build and flash
+
+**ESP32-S3-EYE:**
+```bash
+pio run -e esp32s3eye -t upload
+```
+
+**XIAO ESP32-S3 Sense** (requires bootloader entry):
+```bash
+# 1. Enter bootloader mode:
+#    - Hold BOOT pad (small button near USB-C end)
+#    - Press and release RST pad
+#    - Release BOOT
+#    Device enumerates as 303a:1001 (Espressif USB JTAG)
+#
+# 2. Flash:
+pio run -e xiao_s3_01 -t upload
+
+# 3. Exit bootloader:
+#    - Press RST once
+#    Device boots application, enumerates as 303a:0009
+```
+
+### 3. Verify connection
+
+Check the dashboard (`http://192.168.1.105:8081`) — camera should appear online within 15 seconds.
+
+Monitor serial output (optional):
+```bash
+pio device monitor -e esp32s3eye -b 115200
+```
+
+## Architecture
+
+```
+Camera Task (core 0, priority 5)
+    └─ Capture JPEG frames
+    └─ Motion detection (JPEG delta)
+    └─ Queue to inference task (1-frame deep, drop if full)
+
+Inference Task (core 1, priority 4)
+    └─ Dequeue frames
+    └─ Base64 encode
+    └─ Queue to network task
+
+Network Task (core 1, priority 3)
+    └─ POST /session/frame → Jetson (192.168.1.108:8001)
+    └─ Handle responses, track session state
+    └─ POST /api/cameras/{id}/heartbeat → Command Module
+
+OTA Task (core 1, priority 1)
+    └─ Poll /api/firmware/{channel}/check every 5 minutes
+    └─ Download binary if newer version available
+    └─ Self-update + reboot
+
+MQTT Task (core 1, priority 2)
+    └─ Listen for reboot/restart commands from broker
+```
+
+## Build Flags
+
+Configured in `platformio.ini` per environment:
+
+| Flag | Purpose | Example |
+|---|---|---|
+| `CAMERA_ID` | Device identifier | `xiao-01` |
+| `WIFI_SSID` | Network name | `HomeNetwork` |
+| `WIFI_PASSWORD` | Network password | `secure-password` |
+| `MQTT_BROKER_HOST` | MQTT broker IP | `192.168.1.105` |
+| `MQTT_PASSWORD` | MQTT password | `mqtt-secret` |
+| `JETSON_URL` | Jetson inference service | `http://192.168.1.108:8001` |
+| `COMMAND_MODULE_URL` | Command module URL | `http://192.168.1.105:8081` |
+| `FIRMWARE_VERSION` | Semantic version | `2.1.0` |
+| `FIRMWARE_CHANNEL` | OTA channel (s3eye, xiao) | `xiao` |
+
+## OTA Updates
+
+Cameras poll the command module every 5 minutes for new firmware:
+
+```
+GET /api/firmware/{channel}/check
+Response: { "version": "2.1.0" }
+
+If newer:
+  GET /api/firmware/{channel}/binary
+  Download .bin
+  Self-update partition (ota_0 or ota_1)
+  Reboot into new firmware
+```
+
+To push a new firmware:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+curl -X POST http://192.168.1.105:8081/api/firmware/xiao \
+  -H "X-Firmware-Version: 2.1.1" \
+  -F "file=@.pio/build/xiao_s3_01/firmware.bin"
 ```
 
-The hub will be available at `http://localhost:8000`.
+## Configuration
 
-## API Endpoints
+### Per-Camera Settings
 
-### POST /api/upload/{cam_id}
-Upload a JPEG frame from a camera.
+Dynamic settings pushed by the command module:
 
-- **Headers**:
-  - `Authorization: Bearer secret_psk` (replace with actual PSK)
-  - `Content-Type: multipart/form-data`
-- **Body**: JPEG file as form data
-- **Response**: Confirmation of upload
-
-Example with curl:
-```bash
-curl -X POST "http://localhost:8000/api/upload/cam_01" \
-  -H "Authorization: Bearer secret_psk" \
-  -F "file=@frame.jpg"
+```python
+# camera/src/s3eye/config.h
+MOTION_HEARTBEAT_MS = 1000           # send frame every 1s even w/o motion
+MOTION_JPEG_DELTA_MIN = 2000         # JPEG byte-count delta for motion
+SESSION_END_TIMEOUT_S = 15           # timeout before ending session
+OTA_CHECK_INTERVAL_MS = 300000       # 5-minute OTA poll interval
 ```
 
-### GET /api/stream/{cam_id}
-Stream MJPEG video from a camera.
+### WiFi & Networking
 
-- **Response**: Multipart MJPEG stream
-- Open in browser: `http://localhost:8000/api/stream/cam_01`
-
-### GET /api/cameras
-List active cameras with available streams.
-
-- **Response**: JSON list of camera IDs
-
-## Security Notes
-
-- **PSK Authentication**: Currently uses a hardcoded PSK. In production, use environment variables.
-- **HTTPS**: The instructions require TLS/SSL. For development, use HTTP; for production, deploy behind a reverse proxy with SSL.
-- **Network Isolation**: Cameras should be on a guest network with no knowledge of clients.
-
-## ESP32-CAM Integration
-
-Cameras should:
-- Capture JPEG frames every 200ms
-- POST to `/api/upload/{cam_id}` with `Authorization: Bearer <PSK>` header
-- Use `X-Camera-ID` header if needed (though cam_id is in URL)
-
-## ESP32 Setup
-
-This project supports both ESP32-CAM and ESP32-S3-SPY boards.
-
-### Prerequisites
-- [PlatformIO](https://platformio.org/) installed in VS Code (or Docker for isolation)
-- ESP32 board connected via USB
-
-### Board Support
-
-| Board | Board Type | Camera | PSRAM | USB Device |
-|-------|------------|--------|-------|------------|
-| ESP32-CAM | `esp32cam` | AI-Thinker OV2640 | 1MB | `/dev/ttyUSB0` |
-| ESP32-S3-SPY | `esp32-s3-devkitc-1` | Optional OV2640 | 8MB (QIO) | `/dev/ttyACM0` |
-| ESP32-S3-EYE | `esp32-s3-devkitc-1` | Integrated OV2640 | 8MB (Octal) | `/dev/ttyACM0` |
-
-### Option 1: Native PlatformIO (Recommended for Flashing)
-1. Install PlatformIO IDE extension in VS Code
-2. Open the project
-3. Build and flash directly
-
-### Option 2: Docker Isolation (For Building and Flashing)
-To isolate ESP32 development from your host system:
-
-#### For ESP32-CAM:
-1. **Find your ESP32 USB device**:
-    ```bash
-    ls /dev/tty*
-    ```
-    Common device: `/dev/ttyUSB0`. Note the path.
-
-2. **Build the firmware**:
-    ```bash
-    chmod +x build-esp32-cam.sh
-    ./build-esp32-cam.sh
-    ```
-
-3. **Upload to ESP32-CAM**:
-    ```bash
-    chmod +x upload-esp32-cam.sh
-    ./upload-esp32-cam.sh /dev/ttyUSB0
-    ```
-    Upload sequence:
-    - Connect GPIO 0 to GND with a jumper wire
-    - Press and release the RST button
-    - Wait for upload to complete
-
-4. **Monitor serial output**:
-    ```bash
-    chmod +x monitor-esp32-cam.sh
-    ./monitor-esp32-cam.sh /dev/ttyUSB0
-    ```
-
-#### For ESP32-S3-SPY:
-1. **Find your ESP32 USB device**:
-    ```bash
-    ls /dev/tty*
-    ```
-    Common device: `/dev/ttyACM0` (native USB on S3). Note the path.
-
-2. **Build the firmware**:
-    ```bash
-    chmod +x build-esp32s3.sh
-    ./build-esp32s3.sh
-    ```
-
-3. **Upload to ESP32-S3-SPY**:
-    ```bash
-    chmod +x upload-esp32s3.sh
-    ./upload-esp32s3.sh /dev/ttyACM0
-    ```
-    Upload sequence:
-    - Hold the BOOT button
-    - Press and release the RST button
-    - Release the BOOT button
-    - Wait for upload to complete
-
-4. **Monitor serial output**:
-    ```bash
-    chmod +x monitor-esp32s3.sh
-    ./monitor-esp32s3.sh /dev/ttyACM0
-    ```
-
-The container gets privileged access to the USB device for flashing, but the PlatformIO installation and build process remain isolated from your host.
-
-#### For ESP32-S3-EYE:
-1. **Find your ESP32 USB device**:
-    ```bash
-    ls /dev/tty*
-    ```
-    Common device: `/dev/ttyACM0` (native USB on S3). Note the path.
-
-2. **Build the firmware**:
-    ```bash
-    chmod +x build-esp32s3eye.sh
-    ./build-esp32s3eye.sh
-    ```
-
-3. **Upload to ESP32-S3-EYE**:
-    ```bash
-    chmod +x upload-esp32s3eye.sh
-    ./upload-esp32s3eye.sh /dev/ttyACM0
-    ```
-    Upload sequence:
-    - Hold the BOOT button
-    - Press and release the RST button
-    - Release the BOOT button
-    - Wait for upload to complete
-
-4. **Monitor serial output**:
-    ```bash
-    chmod +x monitor-esp32s3eye.sh
-    ./monitor-esp32s3eye.sh /dev/ttyACM0
-    ```
-
-The container gets privileged access to the USB device for flashing, but the PlatformIO installation and build process remain isolated from your host.
-
-### Configuration
-Update the build flags in `platformio.ini` with your actual values:
-
-```ini
-build_flags =
-    -DCORE_DEBUG_LEVEL=0
-    -D WIFI_SSID="\"YourWiFiName\""
-    -D WIFI_PASSWORD="\"YourWiFiPassword\""
-    -D HUB_URL="\"http://192.168.1.100:8000/api/upload/cam_01\""
-    -D SECRET_PSK="\"your_secure_psk\""
-```
-
-This keeps sensitive information out of the source code, treating them as "secrets" managed at build time.
-
-### Board-Specific Settings
-
-#### ESP32-CAM
-- Frame size: `FRAMESIZE_QVGA` (320x240) for PSRAM
-- JPEG quality: Lower number = higher quality (10-63 range)
-- Uses PSRAM for frame buffering when available
-- GPIO pins configured for AI-Thinker ESP32-CAM
-- Memory-safe: Always calls `esp_camera_fb_return()` after processing
-
-#### ESP32-S3-SPY
-- No camera module (optional camera can be added)
-- Native USB connection (no external USB-to-UART converter needed)
-- Larger PSRAM available by default (8MB QIO)
-- LED on GPIO 38
-
-#### ESP32-S3-EYE
-- Integrated OV2640 camera module (2MP)
-- Native USB connection (no external USB-to-UART converter needed)
-- 8MB Octal PSRAM for frame buffering
-- Camera pins: XCLK=0, SDA=26, SCL=27, Y9=35, Y8=34, Y7=39, Y6=36, Y5=21, Y4=19, Y3=18, Y2=5, VSYNC=25, HREF=23, PCLK=22
-
-### Flashing the ESP32-CAM
-1. Connect ESP32-CAM to USB
-2. Use PlatformIO "Upload" button (native) or `pio run -e esp32cam --target upload` (Docker)
-3. Monitor serial output for connection status
-
-### Flashing the ESP32-S3-SPY
-1. Connect ESP32-S3-SPY to USB
-2. Use PlatformIO "Upload" button (native) or `pio run -e esp32s3spy --target upload` (Docker)
-3. Monitor serial output for connection status
-
-### Flashing the ESP32-S3-EYE
-1. Connect ESP32-S3-EYE to USB
-2. Use PlatformIO "Upload" button (native) or `pio run -e esp32s3eye --target upload` (Docker)
-3. Monitor serial output for connection status
+- **SSID/Password**: Build flags (baked into firmware)
+- **MQTT**: TLS to `192.168.1.105:8883` with per-camera credentials
+- **Jetson**: HTTP to `192.168.1.108:8001` (no TLS on LAN)
+- **Command Module**: HTTP to `192.168.1.105:8081` for heartbeat/OTA
 
 ## Troubleshooting
 
-- **No stream**: Ensure frames are being uploaded to the camera ID
-- **401 Unauthorized**: Check PSK in Authorization header
-- **Memory usage**: Monitor RAM as frames accumulate in memory
-- **Performance**: For multiple cameras/clients, consider optimization in future iterations
+### Camera not appearing online
+1. Check WiFi credentials in build flags
+2. Verify SSID/password with `pio device monitor`
+3. Ping camera IP to confirm WiFi connectivity
+4. Check Jetson/command module are running (`curl http://192.168.1.105:8081/health`)
 
-## Future Enhancements
+### Frames not reaching Jetson
+1. Verify Jetson URL in build flags: `http://192.168.1.108:8001`
+2. Check serial for frame post errors
+3. Confirm network routing between camera and Jetson
 
-- Camera heartbeat monitoring
-- Dynamic resolution settings
-- Web dashboard for camera grid
-- Multi-consumer scaling
-- Automatic camera registration
+### XIAO won't enter bootloader
+1. Bootloader pads are **near the USB-C end**, not top/bottom
+2. Try different pressure/angle when holding BOOT
+3. Verify pad contact with multimeter
+4. If stuck: use esptool to erase and restore partition table
+
+### StoreProhibited crash on XIAO
+The fix `CONFIG_NN_ANSI_C=y` is in `sdkconfig.xiao_peekaboo.defaults`. This is required because TFLite is linked into all XIAO builds (even when inference is pass-through) and its ONNX assembly kernels crash on PSRAM without this flag. Do not remove it.
+
+### WiFi drops frequently
+Symptoms: Offline for 60-750 seconds, then reconnects. Caused by:
+- Power supply instability (use USB 3.0 port, not 2.0)
+- Concurrent WiFi + TLS load causing brownout
+- Fix: Phone charger (2A+) instead of USB
+
+## Development
+
+### Serial monitoring
+
+Use pyserial to avoid hardware reset (DTR):
+
+```bash
+python3 -c "
+import serial, time
+s = serial.Serial('/dev/ttyACM0', 115200, timeout=0.1)
+s.dtr = False  # Prevent auto-reset
+end = time.time() + 120
+while time.time() < end:
+    data = s.read(1024)
+    if data: print(data.decode(errors='replace'), end='', flush=True)
+"
+```
+
+### Building without flashing
+
+```bash
+pio run -e xiao_s3_01
+# Outputs to .pio/build/xiao_s3_01/firmware.bin
+```
+
+### Cleaning build artifacts
+
+```bash
+pio run -e xiao_s3_01 -t clean
+```
+
+## Pin Maps
+
+### ESP32-S3-EYE (integrated OV2640)
+- **Camera**: XCLK=15, SDA=4, SCL=5, VSYNC=6, HREF=7, PCLK=13, Y[9:2]={16,17,18,12,10,8,9,11}
+- **LED**: GPIO 3
+
+### XIAO ESP32-S3 Sense (integrated OV3660)
+- **Camera**: XCLK=10, SDA=40, SCL=39, VSYNC=38, HREF=47, PCLK=13, Y[9:2]={48,11,12,14,16,18,17,15}
+- **LED**: GPIO 21
+- **SD Card**: CLK=7, CMD=9, D0=8, CS=21 (Arduino mode only)
+
+## See Also
+
+- [../docs/](../docs/) — Architecture notes and planning
+- [../README.md](../README.md) — Full system documentation
