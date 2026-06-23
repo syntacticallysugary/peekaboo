@@ -177,7 +177,7 @@ const jetsonOk = () => health.value?.inference_node?.status === "ok";
         </div>
         <div style="display:flex;flex-direction:column;gap:0.35rem">
           <label style="font-size:0.78rem;color:var(--color-muted)">IP Address <span style="opacity:0.5">(optional)</span></label>
-          <input v-model="regIp" type="text" placeholder="192.168.1.50" @keydown.enter="registerCamera" />
+          <input v-model="regIp" type="text" placeholder="192.168.1.x" @keydown.enter="registerCamera" />
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem">
           <button class="btn-primary" :disabled="registering || !regId.trim()" @click="registerCamera">
