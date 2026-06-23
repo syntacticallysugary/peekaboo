@@ -100,9 +100,9 @@ async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks):
 
     await camera_registry.heartbeat(camera_id)
 
-    cooldown_until = _system_state["cooldowns"].get(camera_id)
+    cooldown_until = _system_state["cooldowns"].get("known_person")
     if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
-        logger.debug("Camera %s in cooldown — trigger ignored", camera_id)
+        logger.debug("Known person cooldown active — trigger on %s ignored", camera_id)
         return {"status": "cooldown"}
 
     cam_data = doc.to_dict()

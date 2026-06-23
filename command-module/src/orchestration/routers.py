@@ -27,13 +27,14 @@ def recognition_router(state: SystemState) -> str:
     if person and person.get("is_blocked"):
         return "record"  # unallowed — record with priority
 
-    # Check if this camera is in cooldown for known persons
-    trigger = state["trigger"]
-    camera_id = trigger["camera_id"] if trigger else "unknown"
-    cooldown_until = state["cooldowns"].get(camera_id)
+    # Check if any camera has recognized a known person in the cooldown window
+    cooldown_until = state["cooldowns"].get("known_person")
 
     if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
-        logger.debug("Camera %s is in cooldown — skipping redundant suppression event", camera_id)
+        trigger = state["trigger"]
+        camera_id = trigger["camera_id"] if trigger else "unknown"
+        logger.debug("Known person cooldown active (expires in ~%d sec) — %s suppressed",
+                     int((cooldown_until - datetime.now(timezone.utc)).total_seconds()), camera_id)
         return "notify"  # skip persist/record, just notify dashboard if needed
 
     return "suppress"    # known, not blocked, and NOT in cooldown

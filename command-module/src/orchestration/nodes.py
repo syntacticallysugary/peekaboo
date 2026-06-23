@@ -151,10 +151,12 @@ async def suppress_recording_node(state: SystemState) -> SystemState:
     state["recording_path"] = None
     trigger = state["trigger"]
     camera_id = trigger["camera_id"] if trigger else "unknown"
+    person_id = state.get("matched_person", {}).get("person_id", "unknown")
     from datetime import timedelta
-    state["cooldowns"][camera_id] = datetime.now(timezone.utc) + \
+    state["cooldowns"]["known_person"] = datetime.now(timezone.utc) + \
         timedelta(seconds=settings.known_person_cooldown_s)
-    logger.info("Known person on %s — recording suppressed, cooldown set", camera_id)
+    logger.info("Known person %s on %s — recording suppressed, all-camera cooldown set for %d sec",
+                person_id, camera_id, settings.known_person_cooldown_s)
     return state
 
 

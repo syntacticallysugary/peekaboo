@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     recording_retention_days: int = 30
     recording_min_free_gb: float = 5.0
 
-    # Face recognition cooldown for known persons (seconds)
-    known_person_cooldown_s: int = 600
+    # Face recognition cooldown for known persons across all cameras (seconds)
+    known_person_cooldown_s: int = 900
 
     # Webhooks
     webhook_timeout_s: float = 5.0
