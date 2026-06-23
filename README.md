@@ -1,144 +1,210 @@
 # Peekaboo Intelligence
 
-A privacy-first, edge-first home security system. Face recognition runs on the camera nodes themselves — raw video never leaves the local network.
+A privacy-first, edge-first home security system. Cameras stream JPEG frames over the local network to a Jetson inference node that runs person detection and face recognition — raw video never leaves the local network, and no cloud services are involved in the detection pipeline.
 
 ## Architecture
 
 Three tiers communicate over a local WiFi network:
 
 ```
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
-│  Camera Tier    │    │   Inference Tier      │    │     Command Tier        │
-│  ESP32-S3-EYE   │    │  Jetson Orin Nano     │    │   R5 Workstation        │
-│  (camera/)      │    │  (inference-service/) │    │   (command-module/)     │
-│                 │    │                      │    │                         │
-│ • On-device     │───►│ • InsightFace         │    │ • FastAPI REST API      │
-│   face detect   │    │   (buffalo_l model)   │    │ • LangGraph workflow    │
-│ • Motion detect │    │ • Local identity      │    │ • PostgreSQL + pgvector │
-│ • WiFi upload   │    │   cache               │    │ • MQTT                  │
-│                 │    │ • /identify endpoint  │    │ • WebSocket dashboard   │
-└─────────────────┘    └──────────────────────┘    └─────────────────────────┘
+┌──────────────────────┐    ┌───────────────────────────┐    ┌─────────────────────────┐
+│     Camera Tier      │    │      Inference Tier        │    │     Command Tier        │
+│  ESP32-S3-EYE /      │    │    Jetson Orin Nano        │    │   R5 Workstation        │
+│  XIAO ESP32-S3 Sense │    │   (inference-service/)     │    │   (command-module/)     │
+│  (camera/)           │    │                            │    │                         │
+│                      │    │ • YOLOv8n person detector  │    │ • FastAPI REST API      │
+│ • JPEG frame stream  │───►│ • InsightFace recognition  │───►│ • Person registry       │
+│ • Motion heartbeat   │    │   (buffalo_l model)        │    │ • Alert dispatch        │
+│ • MQTT control       │    │ • Session management       │    │ • PostgreSQL + pgvector │
+│ • OTA updates        │    │ • Arm/disarm enforcement   │    │ • MQTT broker           │
+│                      │    │                            │    │ • WebSocket dashboard   │
+└──────────────────────┘    └───────────────────────────┘    └─────────────────────────┘
 ```
 
 ## Data Flow
 
-**Path A — Motion only (no face detected on device):**
+**Normal operation:**
 ```
-ESP32 → POST /api/cameras/{id}/motion → Command Module → LangGraph workflow
+Camera → POST /session/frame → Inference Service
+                                     │
+                          YOLOv8n person detector
+                                     │
+                          InsightFace face detection
+                          + recognition
+                                     │
+                    ┌────────────────┴────────────────┐
+                    │                                 │
+              known person                    unknown face / person
+         POST /api/cameras/report           POST /api/alerts
+                    │                                 │
+                    └──────────────┬──────────────────┘
+                                   │
+                            Command Module
 ```
 
-**Path B — Face detected on device (hot path):**
+**OTA firmware updates:**
 ```
-ESP32 → POST /identify → Jetson (face crop, base64)
-                           │
-                           ├─ action: "cooldown" → ESP32 suppresses locally
-                           └─ action: "record"   → Jetson POST /api/cameras/report
-                                                         → Command Module → LangGraph
+Command Module stores firmware binaries per channel (s3eye, xiao).
+Camera OTA task polls /api/firmware/{channel}/check on boot and every 5 minutes.
+If a newer version is available, the camera self-updates and reboots.
 ```
 
-**Known-persons sync:**
+**Arm/disarm:**
 ```
-Command Module → POST /sync → Jetson (triggered on DB changes)
+Command Module → POST /system/armed → Inference Service
 ```
-
-The Jetson is called directly by the ESP32 — not by the Command Module. The Jetson calls back to the Command Module only when a recording event is warranted.
+When disarmed, the inference service discards all in-progress sessions immediately
+and stops recording. Cameras continue streaming; detection resumes on re-arm.
 
 ## Services
 
-| Service | Location | Port | Notes |
+| Service | Host | Port | Notes |
 |---|---|---|---|
-| Command Module | R5 workstation (`192.168.0.38`) | `8000` | FastAPI + LangGraph; `network_mode: host` required |
-| Inference Service | Jetson Orin Nano (`192.168.0.122`) | `8001` | FastAPI + InsightFace |
-| PostgreSQL (pgvector) | R5 workstation | `5435` | Person embeddings + event log |
-| MQTT (Mosquitto) | R5 workstation | `1883` | Camera events, future alerting |
+| Command Module | R5 (`192.168.1.105`) | `8081` | FastAPI; `network_mode: host` |
+| Inference Service | Jetson (`192.168.1.108`) | `8001` | FastAPI + InsightFace; NVIDIA runtime |
+| Person Detector | Jetson (`192.168.1.108`) | `8002` | YOLOv8n ONNX; CPU-only sidecar |
+| PostgreSQL (pgvector) | R5 | `5435` | Person embeddings + event log |
+| Mosquitto MQTT | R5 | `8883` (TLS/LAN), `1883` (loopback) | Cameras connect via TLS on 8883 |
 
 ## Repository Layout
 
 ```
 PI/
-├── command-module/      # FastAPI app — camera registry, LangGraph brain, person mgmt
+├── command-module/      # FastAPI app — camera registry, person mgmt, alerts, dashboard
 │   ├── src/
-│   │   ├── api/         # REST routes: cameras, persons, events, recordings, webhooks
+│   │   ├── api/         # REST routes: cameras, persons, events, recordings, alerts,
+│   │   │                #   firmware, system (arm/disarm/schedule), webhooks
 │   │   ├── orchestration/ # LangGraph workflow nodes and state
 │   │   ├── services/    # camera registry, inference client, webhook dispatcher
 │   │   ├── db/          # SQLAlchemy models and database helpers
-│   │   └── storage/     # local / S3 storage backend abstraction
-│   └── frontend/        # React dashboard (in development)
-├── inference-service/   # FastAPI app — InsightFace wrapper for Jetson
-├── camera/              # ESP32-S3-EYE firmware (ESP-IDF / PlatformIO)
-├── mosquitto/           # Mosquitto config
-├── docs/
-├── docker-compose.yml   # Manages db, mqtt, command-module on R5
+│   │   ├── storage/     # local / S3 storage backend abstraction
+│   │   └── websocket/   # WebSocket dashboard event stream
+│   └── frontend/        # React dashboard
+├── inference-service/   # FastAPI app — person detection + face recognition (Jetson)
+│   ├── src/             # Inference service: session management, InsightFace, alerts
+│   └── person-detector/ # YOLOv8n ONNX person presence detector (separate process)
+├── camera/              # ESP32-S3 firmware (PlatformIO / ESP-IDF)
+│   └── src/
+│       ├── s3eye/       # Main firmware: ESP32-S3-EYE and XIAO ESP32-S3 Sense
+│       └── data_collect/ # Training data collection mode
+├── mosquitto/           # Mosquitto config (TLS + auth)
+├── docs/                # Architecture notes and planning docs
+├── docker-compose.yml   # Command tier: db, mqtt, command-module on R5
 ├── init-db.sql          # pgvector schema bootstrap
 └── .env                 # Secrets (not committed)
 ```
 
+## Camera Boards
+
+Two board families share the same `s3eye/` firmware source, selected at build time via PlatformIO environments:
+
+| Board | PlatformIO env | Camera ID | Firmware channel |
+|---|---|---|---|
+| ESP32-S3-EYE | `esp32s3eye` | `s3eye-01` | `s3eye` |
+| XIAO ESP32-S3 Sense | `xiao_s3_01` | `xiao-01` | `xiao` |
+
+The XIAO build requires `CONFIG_NN_ANSI_C=y` in `sdkconfig.xiao_peekaboo.defaults` because
+`esp-tflite-micro` is linked into all XIAO builds and its ONNX assembly kernels crash on PSRAM
+without this flag. See [docs/](docs/) for details.
+
+## Too Close to the (AI) Bleeding Edge
+
+This project started with an ambitious goal: run on-device TFLite person detection on the ESP32-S3 to gate frame transmission to the Jetson. The idea was minimal compute at the edge — only send frames when motion or a person is detected locally.
+
+The attempt revealed hard limits. TFLite's ONNX assembly kernels (esp-nn) cannot write to PSRAM on ESP32-S3 PIE-enabled systems, causing immediate crashes. The workaround (`CONFIG_NN_ANSI_C=y`, forcing portable C kernels) fixed the crash but left us with slow inference (~0.6 fps), high memory overhead, and fragile threshold tuning. Person detection worked but wasn't reliable enough to be a gate.
+
+The solution: **centralize inference on the Jetson**. YOLOv8n runs fast enough on CPU-only (`8ms/frame`), faces get recognized with GPU-accelerated InsightFace, and cross-camera person tracking becomes tractable. Cameras became thin JPEG streamers. This trades minimal edge compute for architectural simplicity and better user experience — a reminder that "edge" and "AI" don't always go together.
+
 ## Prerequisites
 
-- R5 workstation running Docker and Docker Compose
-- Jetson Orin Nano 8GB on the same local network
-- One or more ESP32-S3-EYE boards
-- PlatformIO (for firmware builds)
+- R5 workstation (or equivalent) running Docker and Docker Compose
+- Jetson Orin Nano 8GB on the same local network, with NVIDIA Container Runtime
+- One or more ESP32-S3-EYE or XIAO ESP32-S3 Sense boards
+- PlatformIO CLI (`pip install platformio`) for firmware builds
 
 ## Quick Start
 
 ### 1. Configure environment
 
-Copy `.env.example` to `.env` and fill in your values:
-
 ```bash
 cp .env.example .env
+# Edit .env — set DB credentials, MQTT credentials, Jetson URL, webhook secrets
 ```
 
-### 2. Start the Command Tier
+### 2. Start the Command Tier (R5)
 
 ```bash
 docker compose up -d
 ```
 
-This starts `peekaboo-db` (PostgreSQL + pgvector on port 5435), `peekaboo-mqtt` (Mosquitto on port 1883), and `peekaboo-command` (Command Module on port 8000).
+Starts `peekaboo-db` (PostgreSQL + pgvector, port 5435), `peekaboo-mqtt` (Mosquitto, ports 1883/8883), and `peekaboo-command` (Command Module, port 8081).
 
-### 3. Start the Inference Service (on Jetson)
+### 3. Start the Inference Service (Jetson)
 
 ```bash
-# On the Jetson
-docker build -f Dockerfile.jetson -t peekaboo-inference .
-docker run --runtime nvidia --network host peekaboo-inference
+# On the Jetson — from inference-service/
+docker compose -f docker-compose.yml up -d
 ```
 
-### 4. Flash ESP32-S3-EYE firmware
+Starts `peekaboo-inference` (port 8001) and `peekaboo-person-detector` (port 8002).
+
+### 4. Build and flash firmware
 
 ```bash
 cd camera
-./build-esp32s3eye.sh
-./upload-esp32s3eye.sh /dev/ttyACM0
+
+# ESP32-S3-EYE
+pio run -e esp32s3eye -t upload
+
+# XIAO ESP32-S3 Sense (requires BOOT+RST to enter bootloader — see below)
+pio run -e xiao_s3_01 -t upload
 ```
 
-See [camera/README.md](camera/README.md) for board-specific flashing details.
+**XIAO bootloader entry:** The BOOT and RST pads are near the USB-C end of the board.
+Hold BOOT, press and release RST, release BOOT. The device enumerates as `303a:1001`.
+After flashing, press RST once to boot the application.
 
 ## API Overview
 
-### Command Module (`http://192.168.0.38:8000`)
+### Command Module (`http://192.168.1.105:8081`)
 
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/api/cameras/register` | Camera self-registration on boot |
-| `POST` | `/api/cameras/{id}/heartbeat` | Periodic keepalive |
-| `POST` | `/api/cameras/{id}/motion` | Motion event (no face) |
-| `POST` | `/api/cameras/report` | Face-identified event from Jetson |
-| `GET` | `api/persons` | List enrolled persons |
+| `POST` | `/api/cameras/{id}/heartbeat` | Keepalive (proxied from Jetson) |
+| `POST` | `/api/cameras/report` | Known-person or unknown-face event from Jetson |
+| `POST` | `/api/alerts` | Unknown-person alert from Jetson |
+| `POST` | `/api/cameras/{id}/reboot` | Remote camera reboot via MQTT |
+| `POST` | `/api/cameras/{id}/ota-check` | Ask camera to poll for firmware immediately |
+| `GET`  | `/api/cameras/{id}/config` | Per-camera config (WiFi, Jetson URL, MQTT) |
+| `POST` | `/api/firmware/{channel}` | Upload firmware binary for a channel |
+| `GET`  | `/api/firmware/{channel}/check` | Camera OTA version check |
+| `GET`  | `/api/firmware/{channel}/binary` | Camera OTA binary download |
+| `GET`  | `/api/persons` | List enrolled persons |
 | `POST` | `/api/persons` | Enroll a new person |
-| `GET` | `/api/recordings` | List recordings |
-| `GET` | `/health` | Service + inference node health |
-| `WS` | `/ws/dashboard` | Real-time event stream |
+| `POST` | `/api/persons/{id}/auto-enroll` | Add embedding from a recognized frame |
+| `GET`  | `/api/recordings` | List recordings |
+| `POST` | `/api/system/arm` | Arm the system |
+| `POST` | `/api/system/disarm` | Disarm the system |
+| `GET`  | `/api/system/schedule` | Get arm/disarm schedule |
+| `POST` | `/api/system/schedule` | Set arm/disarm schedule |
+| `GET`  | `/api/webhooks` | List configured webhooks |
+| `POST` | `/api/webhooks` | Add a webhook |
+| `GET`  | `/health` | Service health |
+| `WS`   | `/ws/dashboard` | Real-time event stream |
 
-### Inference Service (`http://192.168.0.122:8001`)
+### Inference Service (`http://192.168.1.108:8001`)
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/identify` | Face crop → identity + action decision |
-| `POST` | `/sync` | Receive updated person embeddings from Command Module |
-| `GET` | `/health` | Model load status |
+| `POST` | `/session/frame` | Receive JPEG frame from camera |
+| `POST` | `/session/end` | Explicit session end |
+| `POST` | `/system/armed` | Receive arm/disarm state from Command Module |
+| `POST` | `/sync` | Receive updated person embeddings |
+| `POST` | `/capture` | Arm face-capture mode for enrollment |
+| `GET`  | `/snapshot/{camera_id}` | Latest frame from a camera |
+| `GET`  | `/stream/{camera_id}` | MJPEG live stream |
+| `GET`  | `/health` | Model load status |
 
 ## Development
 
@@ -147,8 +213,8 @@ See [camera/README.md](camera/README.md) for board-specific flashing details.
 ```bash
 cd command-module
 pip install -r requirements.txt
-DATABASE_URL=postgresql+asyncpg://pfig:pfig_password@localhost:5435/peekaboo \
-  uvicorn src.main:app --reload --port 8000
+DATABASE_URL=postgresql+asyncpg://peekaboo:peekaboo@localhost:5435/peekaboo \
+  uvicorn src.main:app --reload --port 8081
 ```
 
 ### Tests

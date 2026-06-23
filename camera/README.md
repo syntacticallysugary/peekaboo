@@ -9,6 +9,10 @@ ESP32-S3 firmware for streaming JPEG frames to the Jetson inference node. Camera
 | ESP32-S3-EYE | `esp32s3eye` | `/dev/s3eye` | 8MB | 8MB OPI | Integrated OV2640 camera |
 | XIAO ESP32-S3 Sense | `xiao_s3_01` | `/dev/ttyACM0` | 8MB | 8MB OPI | Integrated OV3660 camera; no visible BOOT/RST buttons |
 
+### Why ESP32-CAM was removed
+
+Early versions supported the AI Thinker ESP32-CAM as an ultra-low-cost camera platform. The board worked for basic JPEG streaming, but migrating to the pass-through Jetson-centric architecture revealed a hard constraint: the ESP32 (LX6) has only 520KB of usable SRAM on-chip, and WiFi/MQTT overhead leaves precious little headroom for reliable HTTP client work. The ESP32-S3 boards (with 8MB PSRAM) handle the sustained frame POST traffic without stress; the original ESP32-CAM could not. Rather than maintain a stalled board variant, it was removed to keep the codebase focused on boards that work well.
+
 ## Prerequisites
 
 - [PlatformIO CLI](https://platformio.org/install/cli) (`pip install platformio`)
