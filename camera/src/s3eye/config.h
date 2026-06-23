@@ -58,18 +58,8 @@
 #endif
 
 // ── Camera ────────────────────────────────────────────────────────────────────
-// Resolution and XCLK differ by board: S3 uses OPI PSRAM DMA workaround
-// (10 MHz XCLK), ESP32-CAM uses QSPI PSRAM which handles 20 MHz fine.
-#ifdef BOARD_ESP32CAM
-#define CAM_FRAME_WIDTH   800
-#define CAM_FRAME_HEIGHT  600
-#ifndef CAM_FRAMESIZE
-#define CAM_FRAMESIZE     FRAMESIZE_SVGA
-#endif
-#ifndef CAM_XCLK_HZ
-#define CAM_XCLK_HZ       20000000
-#endif
-#else
+// S3 OPI PSRAM: DMA mode is disabled, forcing an internal→PSRAM memcpy per
+// frame. 10 MHz XCLK gives enough time for that copy; 20 MHz overruns (EV-VSYNC-OVF).
 #define CAM_FRAME_WIDTH   1280
 #define CAM_FRAME_HEIGHT  1024
 #ifndef CAM_FRAMESIZE
@@ -78,27 +68,12 @@
 #ifndef CAM_XCLK_HZ
 #define CAM_XCLK_HZ       10000000
 #endif
-#endif
-// ESP32-CAM uses higher compression (lower quality number = bigger file).
-// SVGA frames at quality 12 (~40 KB) POST too slowly under MAX_MODEM sleep;
-// quality 30 (~18 KB) halves POST time with no meaningful surveillance loss.
-#ifdef BOARD_ESP32CAM
-#define CAM_JPEG_QUALITY  30
-#else
 #define CAM_JPEG_QUALITY  12   // 0=best, 63=worst; overridden by remote config
-#endif
 
 // ── Motion detection ──────────────────────────────────────────────────────────
 // Minimum JPEG byte-count delta between consecutive frames to declare motion.
-// SVGA baseline is ~3x smaller than SXGA, so scale the threshold accordingly.
-#ifdef BOARD_ESP32CAM
-#ifndef MOTION_JPEG_DELTA_MIN
-#define MOTION_JPEG_DELTA_MIN 600
-#endif
-#else
 #ifndef MOTION_JPEG_DELTA_MIN
 #define MOTION_JPEG_DELTA_MIN 2000
-#endif
 #endif
 // Heartbeat: always forward one frame at this interval even with no motion.
 // Keeps sessions alive for stationary subjects and allows enrollment at distance.
@@ -176,25 +151,6 @@
 #define CAM_PIN_HREF    47
 #define CAM_PIN_PCLK    13
 #define LED_PIN         21
-#elif defined(BOARD_ESP32CAM)
-// AI Thinker ESP32-CAM
-#define CAM_PIN_PWDN    32
-#define CAM_PIN_RESET   -1
-#define CAM_PIN_XCLK     0
-#define CAM_PIN_SIOD    26
-#define CAM_PIN_SIOC    27
-#define CAM_PIN_Y2       5
-#define CAM_PIN_Y3      18
-#define CAM_PIN_Y4      19
-#define CAM_PIN_Y5      21
-#define CAM_PIN_Y6      36
-#define CAM_PIN_Y7      39
-#define CAM_PIN_Y8      34
-#define CAM_PIN_Y9      35
-#define CAM_PIN_VSYNC   25
-#define CAM_PIN_HREF    23
-#define CAM_PIN_PCLK    22
-#define LED_PIN         33  // red status LED — GPIO4 is the flash (too bright)
 #else
 // ESP32-S3-EYE
 #define CAM_PIN_PWDN    -1
