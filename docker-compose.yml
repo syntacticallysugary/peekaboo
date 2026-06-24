@@ -28,6 +28,9 @@ services:
       CAMERA_HEARTBEAT_TIMEOUT_S: 360
       RECORDINGS_PATH: /data/recordings
       PORT: 8081
+      # HTTPS/TLS configuration (optional: enable by uncommenting and generating certs with tools/gen-self-signed-cert.sh)
+      # TLS_CERTFILE: /certs/server.crt
+      # TLS_KEYFILE: /certs/server.key
     depends_on:
       mqtt:
         condition: service_started
@@ -35,3 +38,5 @@ services:
       - ./data/recordings:/data/recordings
       - ./data/firmware:/data/firmware
       - ${GCP_SA_KEY_PATH:-/dev/null}:/secrets/gcp-sa.json:ro
+      # Uncomment to enable HTTPS/TLS:
+      # - ./mosquitto/certs:/certs:ro

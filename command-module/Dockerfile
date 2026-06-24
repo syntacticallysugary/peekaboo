@@ -19,4 +19,10 @@ USER peekaboo
 
 WORKDIR /app/src
 EXPOSE 8081
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+
+# Optional HTTPS support: if TLS_CERTFILE and TLS_KEYFILE env vars are set, uvicorn will enable SSL.
+# See docs/HTTPS_SETUP.md for certificate generation and configuration.
+CMD [ \
+  "sh", "-c", \
+  "uvicorn main:app --host 0.0.0.0 --port 8081 ${TLS_CERTFILE:+--ssl-certfile=$TLS_CERTFILE} ${TLS_KEYFILE:+--ssl-keyfile=$TLS_KEYFILE}" \
+  ]
