@@ -1,4 +1,5 @@
 """Recording retrieval endpoints."""
+from auth import verify_api_key
 from fastapi import APIRouter, HTTPException, Query
 from google.cloud.firestore_v1 import FieldFilter
 
@@ -48,7 +49,7 @@ async def list_recordings(
 
 
 @router.get("/{event_id}/url")
-async def get_clip_url(event_id: str):
+async def get_clip_url(event_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc = await db.collection(EVENTS).document(event_id).get()
     if not doc.exists or not doc.to_dict().get("recording_path"):

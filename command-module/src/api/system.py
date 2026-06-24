@@ -1,6 +1,7 @@
 """Arm/disarm control for the security system."""
 import re
 
+from auth import verify_api_key
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -20,12 +21,12 @@ class ScheduleRequest(BaseModel):
 
 
 @router.get("/status")
-async def get_status():
+async def get_status(_: str = Depends(verify_api_key)):
     return {"armed": system_state.is_armed()}
 
 
 @router.post("/arm")
-async def arm():
+async def arm(_: str = Depends(verify_api_key)):
     await system_state.set_armed(True)
     await inference_client.set_armed(True)
     await ws_manager.broadcast({"type": "system_state", "armed": True})
@@ -33,7 +34,7 @@ async def arm():
 
 
 @router.post("/disarm")
-async def disarm():
+async def disarm(_: str = Depends(verify_api_key)):
     await system_state.set_armed(False)
     await inference_client.set_armed(False)
     await ws_manager.broadcast({"type": "system_state", "armed": False})
@@ -41,12 +42,12 @@ async def disarm():
 
 
 @router.get("/schedule")
-async def get_schedule():
+async def get_schedule(_: str = Depends(verify_api_key)):
     return scheduler.get_config()
 
 
 @router.post("/schedule")
-async def set_schedule(req: ScheduleRequest):
+async def set_schedule(req: ScheduleRequest, _: str = Depends(verify_api_key)):
     if req.enabled:
         for t in (req.arm_time, req.disarm_time):
             if not t or not _HHMM.match(t):

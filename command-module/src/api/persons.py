@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timezone
 
 import httpx
+from auth import verify_api_key
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -46,7 +47,7 @@ class PersonUpdate(BaseModel):
 
 
 @router.get("")
-async def list_persons():
+async def list_persons(_: str = Depends(verify_api_key)):
     db = get_db()
     persons = []
     async for doc in db.collection(PERSONS).stream():
@@ -62,7 +63,7 @@ async def list_persons():
 
 
 @router.post("", status_code=201)
-async def create_person(data: PersonCreate):
+async def create_person(data: PersonCreate, _: str = Depends(verify_api_key)):
     db = get_db()
     person_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
@@ -76,7 +77,7 @@ async def create_person(data: PersonCreate):
 
 
 @router.post("/{person_id}/images", status_code=201)
-async def add_face_image(person_id: str, image: UploadFile = File(...)):
+async def add_face_image(person_id: str, image: UploadFile = File(...), _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
     doc = await doc_ref.get()
@@ -115,7 +116,7 @@ async def add_face_image(person_id: str, image: UploadFile = File(...)):
 
 
 @router.put("/{person_id}")
-async def update_person(person_id: str, data: PersonUpdate):
+async def update_person(person_id: str, data: PersonUpdate, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
     doc = await doc_ref.get()
@@ -136,7 +137,7 @@ async def update_person(person_id: str, data: PersonUpdate):
 
 
 @router.post("/{person_id}/capture", status_code=202)
-async def capture_face(person_id: str):
+async def capture_face(person_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
     doc = await doc_ref.get()
@@ -188,7 +189,7 @@ async def capture_face(person_id: str):
 
 
 @router.post("/{person_id}/auto-enroll")
-async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload):
+async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload, _: str = Depends(verify_api_key)):
     """Add an embedding only if it represents a meaningfully new camera perspective.
 
     Skips if the nearest existing embedding already exceeds the similarity threshold,
@@ -227,7 +228,7 @@ async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload):
 
 
 @router.delete("/{person_id}", status_code=204)
-async def delete_person(person_id: str):
+async def delete_person(person_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
     doc = await doc_ref.get()

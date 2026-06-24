@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+from auth import verify_api_key
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 
@@ -18,7 +19,7 @@ def _ensure_dir() -> None:
 
 
 @router.get("")
-async def list_firmware():
+async def list_firmware(_: str = Depends(verify_api_key)):
     """Current stored firmware per known channel, for the Settings UI."""
     _ensure_dir()
     result = []
@@ -40,7 +41,7 @@ async def list_firmware():
 
 
 @router.post("/{channel}")
-async def upload_firmware(channel: str, request: Request):
+async def upload_firmware(channel: str, request: Request, _: str = Depends(verify_api_key)):
     """
     Store a firmware binary for a camera channel (e.g. 's3eye', 'xiao').
 
@@ -67,7 +68,7 @@ async def upload_firmware(channel: str, request: Request):
 
 
 @router.get("/{channel}/check")
-async def check_firmware(channel: str, version: str = Query(...)):
+async def check_firmware(channel: str, version: str = Query(...), _: str = Depends(verify_api_key)):
     """
     Called by cameras on boot and periodically to check for updates.
 
@@ -83,7 +84,7 @@ async def check_firmware(channel: str, version: str = Query(...)):
 
 
 @router.get("/{channel}/binary")
-async def get_firmware_binary(channel: str):
+async def get_firmware_binary(channel: str, _: str = Depends(verify_api_key)):
     """Serve the stored firmware binary for OTA download."""
     bin_path = _FIRMWARE_DIR / f"{channel}.bin"
     if not bin_path.exists():

@@ -2,6 +2,7 @@
 import uuid
 from datetime import datetime, timezone
 
+from auth import verify_api_key
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 
@@ -16,7 +17,7 @@ class WebhookCreate(BaseModel):
 
 
 @router.get("")
-async def list_webhooks():
+async def list_webhooks(_: str = Depends(verify_api_key)):
     db = get_db()
     webhooks = []
     async for doc in db.collection(WEBHOOKS).stream():
@@ -26,7 +27,7 @@ async def list_webhooks():
 
 
 @router.post("", status_code=201)
-async def create_webhook(data: WebhookCreate):
+async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
     db = get_db()
     webhook_id = str(uuid.uuid4())
     await db.collection(WEBHOOKS).document(webhook_id).set({
@@ -39,7 +40,7 @@ async def create_webhook(data: WebhookCreate):
 
 
 @router.delete("/{webhook_id}", status_code=204)
-async def delete_webhook(webhook_id: str):
+async def delete_webhook(webhook_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(WEBHOOKS).document(webhook_id)
     doc = await doc_ref.get()

@@ -3,6 +3,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
+from auth import verify_api_key
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -34,7 +35,7 @@ class SessionAlertRequest(BaseModel):
 
 
 @router.post("", status_code=202)
-async def receive_alert(req: SessionAlertRequest):
+async def receive_alert(req: SessionAlertRequest, _: str = Depends(verify_api_key)):
     if not system_state.is_armed():
         logger.info("System disarmed — discarding session alert from %s", req.camera_id)
         return {"status": "discarded_disarmed"}

@@ -47,5 +47,8 @@ class Settings(BaseSettings):
     # Webhooks
     webhook_timeout_s: float = 5.0
 
+    # API Authentication
+    api_key: str = "change-me-in-production"  # Override via .env: API_KEY=...
+
 
 settings = Settings()

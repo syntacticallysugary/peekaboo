@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 import httpx
+from auth import verify_api_key
 from fastapi import APIRouter, HTTPException, Query
 from google.cloud.firestore_v1 import FieldFilter
 from pydantic import BaseModel
@@ -59,7 +60,7 @@ async def list_events(
 
 
 @router.post("/{event_id}/identify")
-async def identify_event(event_id: str, req: IdentifyRequest):
+async def identify_event(event_id: str, req: IdentifyRequest, _: str = Depends(verify_api_key)):
     """Identify an unknown event as a known person and enroll the face embedding."""
     db = get_db()
     event_ref = db.collection(EVENTS).document(event_id)

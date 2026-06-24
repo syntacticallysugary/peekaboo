@@ -9,7 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from fastapi.security import HTTPBearer
+
 from api import alerts, cameras, events, firmware, persons, recordings, system, webhooks
+from auth import verify_api_key
 from config import settings
 from db.firestore import init_firestore
 from orchestration.workflow import guard_workflow  # noqa: F401 — triggers graph compilation
@@ -65,9 +68,10 @@ app = FastAPI(title="Peekaboo Command Module", version="2.0.0", lifespan=lifespa
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # Frontend dev servers
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 app.include_router(alerts.router)
@@ -81,7 +85,8 @@ app.include_router(webhooks.router)
 
 
 @app.websocket("/ws/dashboard")
-async def dashboard_ws(ws: WebSocket):
+async def dashboard_ws(ws: WebSocket, _: str = Depends(verify_api_key)):
+    """WebSocket connection requires Bearer token in query param: ws://host/ws/dashboard?token=API_KEY"""
     await ws_manager.connect(ws)
     try:
         while True:
