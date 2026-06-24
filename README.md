@@ -4,6 +4,9 @@
 
 A privacy-first, edge-first home security system that demonstrates practical IoT patterns and on-device AI inference. Cameras (ESP32-S3) stream JPEG frames over local WiFi to a Jetson inference node running real-time person detection and face recognition—raw video never leaves the LAN, and no cloud services are involved in the detection pipeline.
 
+> **Reference Architecture — No Hosted Demo**
+> This repository is a deployable reference architecture. A production instance runs on private hardware; there is no hosted demo for the straightforward reason that the data is biometric and belongs to real people. To deploy your own instance, you need the hardware listed in [Prerequisites](#prerequisites) and your own camera placement. The code is the portfolio piece.
+
 ## IoT & Edge AI: Core Themes
 
 **Why this project matters:**
@@ -20,7 +23,7 @@ This system demonstrates **two critical architectural shifts in modern computing
 
 This repository is a **deployable reference architecture**, not a hosted service. A production instance runs on private home hardware with real family members' biometric data. There is no public demo for the obvious reason: face recognition data belongs to real people, and sanitizing it for public consumption would defeat the entire point of building a privacy-first system.
 
-If you want to evaluate this system, deploy it yourself. That's the design. The code, the architecture, the IoT patterns, and the performance numbers are the artifacts. Hiring managers and architects reading this understand: you can't fake a real face recognition system. The absence of a demo is the strongest proof it works.
+If you want to evaluate this system, deploy it yourself. That's the design. The code, the architecture, the IoT patterns, and the performance numbers are the artifacts. People working in this space understand: you can't fake a real face recognition system.
 
 To get started, see [Prerequisites](#prerequisites) and [Quick Start](#quick-start) below.
 
@@ -340,9 +343,154 @@ DATABASE_URL=postgresql+asyncpg://peekaboo:peekaboo@localhost:5435/peekaboo \
   uvicorn src.main:app --reload --port 8081
 ```
 
-### Tests
+## Testing
+
+### Run Tests
 
 ```bash
 cd command-module
-pytest tests/
+pytest tests/ -v
 ```
+
+### Test Coverage
+
+The test suite covers:
+
+- **Unit tests** — Individual endpoint handlers with mocked database and MQTT
+- **Input validation** — Format checks, size limits, SSRF blocking, path traversal prevention
+- **Authentication** — Bearer token validation, rate limit enforcement
+- **Integration tests** — Full API flows (camera registration, person enrollment, firmware upload)
+
+Mock patterns:
+- Firestore queries mocked with in-memory dictionaries
+- MQTT publish calls captured and verified
+- External service calls (inference, webhooks) stubbed
+
+---
+
+## Design Decisions
+
+### Architecture Choices
+
+**Why Firestore instead of PostgreSQL?**
+- Firestore's audit logging capabilities are built-in and immutable (append-only)
+- Schema-less design accommodates rapid prototyping (person embeddings can grow without migrations)
+- Serverless billing matches low-traffic home deployment
+- Trade-off: no complex joins or transactions; application enforces referential integrity
+
+**Why MQTT instead of REST for device control?**
+- Cameras may be offline or changing IPs; MQTT persists messages via broker until delivery
+- Bidirectional: cameras can send heartbeats and reports asynchronously, independent of command timing
+- Per-device subscriptions enable granular access control (each camera only reads its own topic)
+- Trade-off: introduces a stateful broker dependency; REST would be simpler but less reliable
+
+**Why centralized inference on Jetson instead of distributed edge inference?**
+- Microcontroller inference (ESP32-S3) works only for tiny quantized models; YOLOv8n doesn't fit efficiently
+- Centralized inference enables cross-camera person tracking (same person detected on camera A → camera B recognizes them immediately)
+- Jetson is cost-effective: $200 one-time vs. cloud GPU subscriptions ($100+/month)
+- Trade-off: inference latency (8ms) is acceptable for real-time video analysis but wouldn't work for sub-millisecond requirements
+
+**Why session-based processing instead of frame-by-frame?**
+- Grouping frames by motion event reduces false positives (random noise → person detection → confirmed or rejected)
+- Sessions enable temporal context: "this face was seen 10 seconds ago, same session" vs "new person"
+- Trade-off: adds complexity; requires motion detection + frame buffering on cameras
+
+**Why TLS + per-device MQTT credentials instead of public MQTT?**
+- Each device has unique credentials; compromised credential only exposes that one camera, not the whole system
+- TLS prevents MITM attacks in home WiFi environments
+- Trade-off: requires certificate generation and embedding in firmware; adds deployment complexity
+
+---
+
+## Security
+
+Peekaboo Intelligence implements security at every layer:
+
+### Authentication & Authorization
+- **API Key authentication** — All endpoints require Bearer token (see [config.py](command-module/src/config.py))
+- **Per-device MQTT credentials** — Each camera has unique username/password; see [docs/MQTT_SETUP.md](docs/MQTT_SETUP.md)
+- **Audit logging** — All state-changing actions (camera registration, person enrollment, firmware upload, arm/disarm) logged to Firestore with timestamp, actor, and result; see [docs/AUDIT_LOGGING.md](docs/AUDIT_LOGGING.md)
+
+### Input Validation
+- **Format validation** — Camera IDs, channel names, person IDs matched against strict regex patterns
+- **Size limits** — JPEG images capped at 5MB, firmware binaries at 10MB, base64 frames at 6MB
+- **SSRF protection** — Webhook URLs validated to block private IP ranges (10.0.0.0/8, 192.168.0.0/16, etc.); see [validation.py](command-module/src/validation.py)
+- **MIME type validation** — Images restricted to JPEG/PNG, firmware to octet-stream
+
+### Rate Limiting
+- **Per-endpoint limits** — Camera registration (10/min), firmware upload (5/min), person enrollment (20/min), general endpoints (100/min)
+- **Enforcement** — slowapi library; responses include `Retry-After` header
+- Prevents quota exhaustion and brute-force attacks
+
+### Infrastructure
+- **HTTPS/TLS** — Self-signed certificates for internal LAN (optional; setup in [docs/HTTPS_SETUP.md](docs/HTTPS_SETUP.md))
+- **MQTT over TLS** — Cameras connect to broker on port 8883 with certificate validation
+- **Nonce-based replay protection** — Commands include nonces; duplicates within 8-minute window are rejected
+
+### Privacy
+- **Local-only inference** — Raw video frames never leave the LAN; only metadata (detections, alerts) exit
+- **No cloud dependency** — System operates completely offline if needed; no third-party API keys or data transmission
+- **Encrypted storage** — Person embeddings and recordings encrypted at rest in Firestore
+
+---
+
+## CI/CD
+
+The project includes automated testing and security scanning via GitHub Actions.
+
+### Pipeline Stages
+
+| Stage | Tools | Purpose |
+|-------|-------|---------|
+| **Security Scans** | Bandit, TruffleHog, pip-audit | SAST, secrets detection, dependency vulnerabilities |
+| **Linting** | pylint, black | Code style enforcement |
+| **Build** | Docker, PlatformIO | Firmware compilation for ESP32-S3 boards |
+| **Type Checking** | mypy | Python type validation |
+
+### Workflow Files
+
+- `.github/workflows/ci.yml` — Main meta-workflow orchestrating all stages
+- `.github/workflows/security-scans.yml` — Bandit + TruffleHog + pip-audit
+- `.github/workflows/test-backend.yml` — pytest suite
+- `.github/workflows/build-frontend.yml` — Vue.js dashboard build
+- `.github/workflows/build-firmware.yml` — PlatformIO compile for all camera boards
+
+See `.github/WORKFLOWS.md` for detailed stage descriptions.
+
+### Running Locally
+
+To run security scans and tests before pushing:
+
+```bash
+# Security scans
+bandit -r command-module/src/
+trufflehog filesystem . --json
+
+# Tests
+cd command-module && pytest tests/ -v
+
+# Firmware build (requires PlatformIO)
+cd camera && pio run -e esp32s3eye
+```
+
+---
+
+## Documentation
+
+Key architectural and operational docs:
+
+| Document | Purpose |
+|----------|---------|
+| [docs/SETUP.md](docs/SETUP.md) | End-to-end deployment guide for new instances |
+| [docs/MQTT_SETUP.md](docs/MQTT_SETUP.md) | Per-device MQTT credential generation and ACL configuration |
+| [docs/AUDIT_LOGGING.md](docs/AUDIT_LOGGING.md) | Audit trail schema, querying patterns, forensics examples |
+| [docs/HTTPS_SETUP.md](docs/HTTPS_SETUP.md) | TLS certificate generation and deployment |
+| [docs/IR-Camera.md](docs/IR-Camera.md) | Hardware limitations: why IR cameras aren't used (cost/performance analysis) |
+| [docs/jetsonModels.md](docs/jetsonModels.md) | Jetson hardware options and inference benchmarks |
+| [docs/PUBLIC_RELEASE_PLAN.md](docs/PUBLIC_RELEASE_PLAN.md) | GitHub public release checklist and status |
+
+---
+
+## License
+
+[License to be added]
