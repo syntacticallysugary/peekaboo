@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from auth import verify_api_key
+from audit import log_firmware_uploaded
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -71,6 +72,7 @@ async def upload_firmware(channel: str, request: Request, _: str = Depends(verif
     (_FIRMWARE_DIR / f"{channel}.bin").write_bytes(body)
     (_FIRMWARE_DIR / f"{channel}.version").write_text(version)
 
+    await log_firmware_uploaded(actor="api", channel=channel, version=version, size_bytes=len(body))
     return {"channel": channel, "version": version, "size": len(body)}
 
 

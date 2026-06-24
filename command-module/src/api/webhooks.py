@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from auth import verify_api_key
+from audit import log_webhook_created, log_webhook_deleted
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from validation import validate_webhook_url
 from fastapi import APIRouter, Depends, HTTPException
@@ -42,13 +43,15 @@ async def list_webhooks(_: str = Depends(verify_api_key)):
 async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
     db = get_db()
     webhook_id = str(uuid.uuid4())
+    url_str = str(data.url)
     await db.collection(WEBHOOKS).document(webhook_id).set({
-        "url": str(data.url),
+        "url": url_str,
         "secret": data.secret,
         "active": True,
         "created_at": datetime.now(timezone.utc),
     })
-    return {"webhook_id": webhook_id, "url": str(data.url)}
+    await log_webhook_created(actor="api", webhook_id=webhook_id, url=url_str)
+    return {"webhook_id": webhook_id, "url": url_str}
 
 
 @router.delete("/{webhook_id}", status_code=204)
@@ -60,3 +63,4 @@ async def delete_webhook(webhook_id: str, _: str = Depends(verify_api_key)):
     if not doc.exists:
         raise HTTPException(404)
     await doc_ref.delete()
+    await log_webhook_deleted(actor="api", webhook_id=webhook_id)

@@ -8,8 +8,9 @@ from datetime import datetime, timezone
 
 import httpx
 from auth import verify_api_key
+from audit import log_face_enrolled, log_person_created, log_person_deleted
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from config import settings
@@ -76,6 +77,7 @@ async def create_person(data: PersonCreate, _: str = Depends(verify_api_key)):
         "created_at": now,
         "embeddings": [],
     })
+    await log_person_created(actor="api", person_id=person_id, name=data.name)
     return {"person_id": person_id, "name": data.name}
 
 
@@ -242,5 +244,7 @@ async def delete_person(person_id: str, _: str = Depends(verify_api_key)):
     doc = await doc_ref.get()
     if not doc.exists:
         raise HTTPException(404)
+    person_name = doc.to_dict().get("name") if doc.exists else None
     await doc_ref.delete()
+    await log_person_deleted(actor="api", person_id=person_id, name=person_name)
     await sync_identities_to_edge()
