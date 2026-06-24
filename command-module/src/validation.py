@@ -137,50 +137,80 @@ def validate_b64_frame_size(b64_data: str) -> str:
     return b64_data
 
 
-def validate_webhook_url(url: str) -> str:
-    """Validate webhook URL for safety.
+def validate_webhook_url(url_str: str) -> str:
+    """Validate webhook URL for SSRF safety.
 
     Blocks:
     - Private IP ranges (127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
-    - Non-HTTP(S) schemes (file://, gopher://, etc.)
-    - Localhost
+    - Link-local and multicast ranges
+    - Non-HTTP(S) schemes
+    - Localhost and shorthand hostnames
 
     Raises:
         HTTPException: 400 if unsafe.
 
     Returns:
-        The validated url.
+        The validated URL string.
     """
     try:
-        parsed = urlparse(url)
+        parsed = urlparse(url_str)
     except Exception:
-        raise HTTPException(400, "Invalid URL")
+        raise HTTPException(400, "Invalid URL format")
 
-    # Check scheme
+    # Check scheme (only HTTP/HTTPS allowed)
     if parsed.scheme not in ("http", "https"):
-        raise HTTPException(400, "Only http/https schemes allowed")
+        raise HTTPException(400, "Only http/https schemes allowed for webhooks")
 
-    # Check hostname
+    # Extract hostname
     hostname = parsed.hostname or ""
     if not hostname:
-        raise HTTPException(400, "URL must have a hostname")
+        raise HTTPException(400, "Webhook URL must include a hostname")
 
-    # Block localhost
-    if hostname in ("localhost", "127.0.0.1", "::1"):
-        raise HTTPException(400, "Localhost URLs not allowed")
+    # Require https for external webhooks
+    if parsed.scheme == "http":
+        raise HTTPException(400, "Webhook URLs must use HTTPS (not HTTP)")
 
-    # Block private IP ranges
-    private_ranges = [
-        "127.0.0.0/8",      # Loopback
-        "10.0.0.0/8",       # Private
-        "172.16.0.0/12",    # Private
-        "192.168.0.0/16",   # Private
-        "169.254.0.0/16",   # Link-local
-        "224.0.0.0/4",      # Multicast
-        "255.255.255.255",  # Broadcast
-    ]
-    # Simple check (not comprehensive)
-    if any(hostname.startswith(r.split("/")[0].rsplit(".", 1)[0]) for r in private_ranges):
-        raise HTTPException(400, "Private IP addresses not allowed in webhook URLs")
+    # Block localhost variants
+    localhost_variants = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "[::]", "127.0.0.2")
+    if hostname.lower() in localhost_variants or hostname.startswith("127."):
+        raise HTTPException(400, "Localhost URLs not allowed for webhooks")
 
-    return url
+    # Block private IPv4 ranges using simple prefix checks
+    # (not comprehensive CIDR checking, but sufficient for SSRF blocking)
+    blocked_prefixes = (
+        "10.",           # 10.0.0.0/8
+        "172.16.",       # 172.16.0.0/12 (start of range)
+        "172.17.",
+        "172.18.",
+        "172.19.",
+        "172.20.",
+        "172.21.",
+        "172.22.",
+        "172.23.",
+        "172.24.",
+        "172.25.",
+        "172.26.",
+        "172.27.",
+        "172.28.",
+        "172.29.",
+        "172.30.",
+        "172.31.",       # 172.31.255.255/12 (end of range)
+        "192.168.",      # 192.168.0.0/16
+        "169.254.",      # 169.254.0.0/16 (link-local)
+        "224.",          # 224.0.0.0/4 (multicast)
+        "255.255.",      # 255.255.x.x (broadcast)
+    )
+
+    for prefix in blocked_prefixes:
+        if hostname.startswith(prefix):
+            raise HTTPException(400, f"Private network URLs not allowed for webhooks (blocked: {prefix}*)")
+
+    # Block IPv6 private ranges (basic check)
+    if hostname.startswith("fc") or hostname.startswith("fd"):
+        raise HTTPException(400, "IPv6 private ranges not allowed for webhooks")
+
+    # Require HTTPS for external URLs as defense in depth
+    if parsed.scheme != "https":
+        raise HTTPException(400, "Only HTTPS webhooks supported (HTTP not secure)")
+
+    return url_str

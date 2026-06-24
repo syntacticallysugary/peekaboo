@@ -1,11 +1,12 @@
-"""Webhook endpoint registration."""
+"""Webhook endpoint registration with SSRF protection."""
 import uuid
 from datetime import datetime, timezone
 
 from auth import verify_api_key
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, HttpUrl
+from validation import validate_webhook_url
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, HttpUrl, field_validator
 
 from db.firestore import WEBHOOKS, get_db
 
@@ -15,6 +16,14 @@ router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 class WebhookCreate(BaseModel):
     url: HttpUrl
     secret: str | None = None
+
+    @field_validator("url", mode="before")
+    @classmethod
+    def validate_url(cls, v: str | HttpUrl) -> str:
+        """Validate webhook URL for SSRF safety."""
+        url_str = str(v)
+        validate_webhook_url(url_str)  # Raises HTTPException if invalid
+        return url_str
 
 
 @router.get("")
