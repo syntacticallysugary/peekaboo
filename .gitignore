@@ -12,9 +12,14 @@ camera/.pio/
 camera/.venv/
 camera/sdkconfig.esp32cam.defaults
 
-# Environment
+# Environment & Credentials (never commit)
 .env
+.env.local
 *.local
+camera/.env
+camera/credentials.h
+command-module/.env
+inference-service/.env
 
 # MQTT secrets, runtime config, and broker state — generated per-deployment, never committed
 mosquitto/certs/
