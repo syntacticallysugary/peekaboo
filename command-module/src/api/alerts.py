@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from auth import verify_api_key
 from rate_limit import limiter
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from db.postgres import EVENTS, get_db

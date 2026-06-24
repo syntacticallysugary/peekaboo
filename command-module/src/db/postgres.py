@@ -30,6 +30,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
+from sqlalchemy import Column
 
 from config import settings
 
@@ -57,13 +58,13 @@ class CameraModel(Base):
 
     __tablename__ = "cameras"
 
-    camera_id = String(50, primary_key=True)
-    type = String(50, nullable=False)
-    ip = String(45, nullable=True)
-    stream_url = String(255, nullable=True)
-    status = String(20, default="disconnected")
-    last_seen = DateTime(timezone=True, nullable=True)
-    created_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    camera_id = Column(String(50), primary_key=True)
+    type = Column(String(50), nullable=False)
+    ip = Column(String(45), nullable=True)
+    stream_url = Column(String(255), nullable=True)
+    status = Column(String(20), default="disconnected")
+    last_seen = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class PersonModel(Base):
@@ -71,10 +72,10 @@ class PersonModel(Base):
 
     __tablename__ = "persons"
 
-    person_id = String(255, primary_key=True)
-    name = String(255, nullable=False)
-    is_blocked = Boolean(default=False)
-    created_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    person_id = Column(String(255), primary_key=True)
+    name = Column(String(255), nullable=False)
+    is_blocked = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     embeddings = relationship("EmbeddingModel", back_populates="person", cascade="all, delete-orphan")
 
@@ -84,11 +85,11 @@ class EmbeddingModel(Base):
 
     __tablename__ = "embeddings"
 
-    embedding_id = String(255, primary_key=True)
-    person_id = String(255, ForeignKey("persons.person_id"), nullable=False)
-    embedding = JSON(none_as_null=True)
-    source_image = Text(nullable=True)
-    created_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    embedding_id = Column(String(255), primary_key=True)
+    person_id = Column(String(255), ForeignKey("persons.person_id"), nullable=False)
+    embedding = Column(JSON, nullable=True)
+    source_image = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     person = relationship("PersonModel", back_populates="embeddings")
 
@@ -98,14 +99,14 @@ class EventModel(Base):
 
     __tablename__ = "events"
 
-    event_id = String(255, primary_key=True)
-    camera_id = String(50, ForeignKey("cameras.camera_id"), nullable=False)
-    detected_at = DateTime(timezone=True, nullable=False)
-    classification = String(50, nullable=False)
-    person_id = String(255, ForeignKey("persons.person_id"), nullable=True)
-    confidence = Float(nullable=True)
-    recording_path = String(255, nullable=True)
-    created_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    event_id = Column(String(255), primary_key=True)
+    camera_id = Column(String(50), ForeignKey("cameras.camera_id"), nullable=False)
+    detected_at = Column(DateTime(timezone=True), nullable=False)
+    classification = Column(String(50), nullable=False)
+    person_id = Column(String(255), ForeignKey("persons.person_id"), nullable=True)
+    confidence = Column(Float, nullable=True)
+    recording_path = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class WebhookModel(Base):
@@ -113,11 +114,11 @@ class WebhookModel(Base):
 
     __tablename__ = "webhooks"
 
-    webhook_id = String(255, primary_key=True)
-    url = String(2048, nullable=False)
-    secret = String(255, nullable=True)
-    active = Boolean(default=True)
-    created_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    webhook_id = Column(String(255), primary_key=True)
+    url = Column(String(2048), nullable=False)
+    secret = Column(String(255), nullable=True)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class SystemModel(Base):
@@ -125,12 +126,12 @@ class SystemModel(Base):
 
     __tablename__ = "system"
 
-    id = Integer(primary_key=True, autoincrement=False)
-    armed = Boolean(default=False)
-    schedule_enabled = Boolean(default=False)
-    schedule_arm_time = String(8, nullable=True)
-    schedule_disarm_time = String(8, nullable=True)
-    updated_at = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc))
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    armed = Column(Boolean, default=False)
+    schedule_enabled = Column(Boolean, default=False)
+    schedule_arm_time = Column(String(8), nullable=True)
+    schedule_disarm_time = Column(String(8), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class AuditLogModel(Base):
@@ -138,15 +139,15 @@ class AuditLogModel(Base):
 
     __tablename__ = "audit_logs"
 
-    id = Integer(primary_key=True, autoincrement=True)
-    timestamp = DateTime(timezone=True, default=lambda: datetime.now(timezone.utc), nullable=False)
-    event_type = String(50, nullable=False)
-    actor = String(255, nullable=False)
-    resource = String(255, nullable=True)
-    resource_type = String(50, nullable=True)
-    success = Boolean(default=True)
-    error_reason = String(500, nullable=True)
-    details = JSON(none_as_null=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    event_type = Column(String(50), nullable=False)
+    actor = Column(String(255), nullable=False)
+    resource = Column(String(255), nullable=True)
+    resource_type = Column(String(50), nullable=True)
+    success = Column(Boolean, default=True)
+    error_reason = Column(String(500), nullable=True)
+    details = Column(JSON, nullable=True)
 
 
 # ============================================================================

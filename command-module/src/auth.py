@@ -4,14 +4,14 @@ All endpoints except /health require a valid Bearer token (API key).
 """
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer
 
 from config import settings
 
 security = HTTPBearer()
 
 
-async def verify_api_key(credentials: HTTPAuthCredentials = Depends(security)) -> str:
+async def verify_api_key(credentials = Depends(security)) -> str:
     """Verify Bearer token matches configured API key.
 
     Raises:
