@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from auth import verify_api_key
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from validation import validate_channel, MAX_FIRMWARE_SIZE
 
 router = APIRouter(prefix="/api/firmware", tags=["firmware"])
 
@@ -52,6 +53,7 @@ async def upload_firmware(channel: str, request: Request, _: str = Depends(verif
              -H 'Content-Type: application/octet-stream' \\
              --data-binary @.pio/build/esp32s3eye/firmware.bin
     """
+    channel = validate_channel(channel)
     _ensure_dir()
     version = request.headers.get("X-Firmware-Version", "").strip()
     if not version:
@@ -60,6 +62,8 @@ async def upload_firmware(channel: str, request: Request, _: str = Depends(verif
     body = await request.body()
     if len(body) < 1024:
         raise HTTPException(400, "Firmware binary too small — upload the full .bin file")
+    if len(body) > MAX_FIRMWARE_SIZE:
+        raise HTTPException(413, f"Firmware exceeds {MAX_FIRMWARE_SIZE // (1024*1024)} MB limit")
 
     (_FIRMWARE_DIR / f"{channel}.bin").write_bytes(body)
     (_FIRMWARE_DIR / f"{channel}.version").write_text(version)
@@ -75,6 +79,7 @@ async def check_firmware(channel: str, version: str = Query(...), _: str = Depen
     Returns update_available=true when the stored version differs from the
     device's current version string.
     """
+    channel = validate_channel(channel)
     ver_path = _FIRMWARE_DIR / f"{channel}.version"
     if not ver_path.exists():
         return {"update_available": False, "version": None}
@@ -86,6 +91,7 @@ async def check_firmware(channel: str, version: str = Query(...), _: str = Depen
 @router.get("/{channel}/binary")
 async def get_firmware_binary(channel: str, _: str = Depends(verify_api_key)):
     """Serve the stored firmware binary for OTA download."""
+    channel = validate_channel(channel)
     bin_path = _FIRMWARE_DIR / f"{channel}.bin"
     if not bin_path.exists():
         raise HTTPException(404, f"No firmware stored for channel '{channel}'")

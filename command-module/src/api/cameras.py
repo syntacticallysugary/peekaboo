@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from auth import verify_api_key
 from config import settings
 from db.firestore import CAMERAS, EVENTS, PERSONS, get_db
+from validation import validate_camera_id
 from orchestration.state import SystemState, TriggerEvent
 from orchestration.workflow import guard_workflow
 from services import camera_registry, system_state
@@ -94,6 +95,7 @@ async def register(req: RegisterRequest, _: str = Depends(verify_api_key)):
 
 @router.post("/{camera_id}/trigger", status_code=202)
 async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
@@ -138,6 +140,7 @@ async def list_cameras(_: str = Depends(verify_api_key)):
 
 @router.delete("/{camera_id}", status_code=204)
 async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc_ref = db.collection(CAMERAS).document(camera_id)
     doc = await doc_ref.get()
@@ -148,6 +151,7 @@ async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
 
 @router.get("/{camera_id}/config", response_model=CameraConfig)
 async def get_camera_config(camera_id: str, _: str = Depends(verify_api_key)):
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
@@ -183,6 +187,7 @@ async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks,
 @router.post("/{camera_id}/heartbeat", status_code=200)
 async def camera_heartbeat(camera_id: str, _: str = Depends(verify_api_key)):
     """Called by the inference service when a camera is actively sending frames."""
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if doc.exists:
@@ -256,6 +261,7 @@ async def _handle_edge_report(req: EdgeReportRequest) -> None:
 
 
 async def _require_camera(camera_id: str) -> None:
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
@@ -277,6 +283,7 @@ async def reboot_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/{camera_id}/ota-check", status_code=202)
 async def ota_check_camera(camera_id: str, _: str = Depends(verify_api_key)):
     """Ask the camera to poll for new firmware immediately."""
+    camera_id = validate_camera_id(camera_id)
     from services.mqtt_control import mqtt_control
     await _require_camera(camera_id)
     try:
@@ -303,12 +310,14 @@ async def diag_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.get("/{camera_id}/status")
 async def camera_mqtt_status(camera_id: str, _: str = Depends(verify_api_key)):
     """Return the last status message received from the camera over MQTT."""
+    camera_id = validate_camera_id(camera_id)
     from services.mqtt_control import latest_status
     return latest_status.get(camera_id) or {"event": "unknown"}
 
 
 @router.post("/{camera_id}/motion", status_code=202)
 async def motion_event(camera_id: str, req: MotionEventRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+    camera_id = validate_camera_id(camera_id)
     db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
