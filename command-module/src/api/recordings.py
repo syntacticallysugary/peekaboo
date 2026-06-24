@@ -1,8 +1,7 @@
 """Recording retrieval endpoints."""
 from auth import verify_api_key
 from rate_limit import limiter
-from fastapi import APIRouter, HTTPException, Query
-from google.cloud.firestore_v1 import FieldFilter
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from db.postgres import EVENTS, get_db
 from storage.factory import get_storage_backend
@@ -35,19 +34,23 @@ async def list_recordings(
     Requires Firestore composite indexes — see api/events.py note.
     """
     db = get_db()
-    q = db.collection(EVENTS).where(filter=FieldFilter("recording_path", "!=", None))
-
-    if camera_id:
-        q = q.where(filter=FieldFilter("camera_id", "==", camera_id))
-    if classification:
-        q = q.where(filter=FieldFilter("classification", "==", classification))
-
-    q = q.order_by("recording_path").order_by("detected_at", direction="DESCENDING").limit(limit)
 
     recordings = []
-    async for doc in q.stream():
-        recordings.append(_serialise(doc.id, doc.to_dict()))
-    return recordings
+    async for doc in db.collection(EVENTS).stream():
+        data = doc.to_dict()
+        # Filter for recordings only
+        if not data.get("recording_path"):
+            continue
+        # Apply other filters
+        if camera_id and data.get("camera_id") != camera_id:
+            continue
+        if classification and data.get("classification") != classification:
+            continue
+        recordings.append(_serialise(doc.id, data))
+
+    # Sort by recording_path, then by detected_at descending
+    recordings.sort(key=lambda e: (e.get("recording_path", ""), -int(e.get("detected_at", "0")[:10])))
+    return recordings[:limit]
 
 
 @router.get("/{event_id}/url")

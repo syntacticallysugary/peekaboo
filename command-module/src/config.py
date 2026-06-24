@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     inference_timeout_s: float = 10.0
     inference_offline_threshold_s: float = 60.0
 
-    # Google Cloud
-    gcp_project_id: str = ""
+    # Database
+    database_url: str = "postgresql+asyncpg://peekaboo:peekaboo@localhost/peekaboo"
 
     # Storage — "local" or "s3"
     storage_backend: str = "local"

@@ -5,8 +5,7 @@ from datetime import datetime, timezone
 import httpx
 from auth import verify_api_key
 from rate_limit import limiter
-from fastapi import APIRouter, HTTPException, Query
-from google.cloud.firestore_v1 import FieldFilter
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from config import settings
@@ -46,19 +45,20 @@ async def list_events(
     camera_id filter is used — create it via the GCP Console or `firebase deploy`.
     """
     db = get_db()
-    q = db.collection(EVENTS)
-
-    if camera_id:
-        q = q.where(filter=FieldFilter("camera_id", "==", camera_id))
-    if classification:
-        q = q.where(filter=FieldFilter("classification", "==", classification))
-
-    q = q.order_by("detected_at", direction="DESCENDING").limit(limit)
 
     events = []
-    async for doc in q.stream():
-        events.append(_serialise(doc.id, doc.to_dict()))
-    return events
+    async for doc in db.collection(EVENTS).stream():
+        data = doc.to_dict()
+        # Apply filters
+        if camera_id and data.get("camera_id") != camera_id:
+            continue
+        if classification and data.get("classification") != classification:
+            continue
+        events.append(_serialise(doc.id, data))
+
+    # Sort by detected_at descending and limit
+    events.sort(key=lambda e: e.get("detected_at", ""), reverse=True)
+    return events[:limit]
 
 
 @router.post("/{event_id}/identify")

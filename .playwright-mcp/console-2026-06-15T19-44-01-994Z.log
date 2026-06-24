@@ -1,0 +1,1 @@
+[  700076ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-CFbth6Pl.js:24

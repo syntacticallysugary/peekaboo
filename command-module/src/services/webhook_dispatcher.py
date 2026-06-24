@@ -6,7 +6,6 @@ import logging
 
 import httpx
 
-from google.cloud.firestore_v1 import FieldFilter
 
 from config import settings
 from db.postgres import WEBHOOKS, get_db
@@ -19,8 +18,11 @@ async def _dispatch(event: DetectionEvent) -> None:
     payload = json.dumps(event.to_dict()).encode()
     db = get_db()
 
-    async for doc in db.collection(WEBHOOKS).where(filter=FieldFilter("active", "==", True)).stream():
+    async for doc in db.collection(WEBHOOKS).stream():
         wh = doc.to_dict()
+        # Skip inactive webhooks
+        if not wh.get("active", True):
+            continue
         headers = {"Content-Type": "application/json"}
         secret = wh.get("secret")
         if secret:

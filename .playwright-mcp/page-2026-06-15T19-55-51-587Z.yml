@@ -1,0 +1,732 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]: peekaboo.ai
+    - generic [ref=e5]:
+      - link "Dashboard" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Events" [active] [ref=e7] [cursor=pointer]:
+        - /url: /events
+      - link "Persons" [ref=e8] [cursor=pointer]:
+        - /url: /persons
+  - main [ref=e9]:
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - paragraph [ref=e48]: History
+        - heading "Detection Events" [level=2] [ref=e50]
+      - generic [ref=e51]:
+        - combobox [ref=e52]:
+          - option "All classifications" [selected]
+          - option "Unknown"
+          - option "Authorized"
+          - option "Blocked"
+          - option "No face"
+        - button "Refresh" [ref=e53] [cursor=pointer]
+      - table [ref=e55]:
+        - rowgroup [ref=e56]:
+          - row "Time Camera Classification Confidence Recording" [ref=e57]:
+            - columnheader "Time" [ref=e58]
+            - columnheader "Camera" [ref=e59]
+            - columnheader "Classification" [ref=e60]
+            - columnheader "Confidence" [ref=e61]
+            - columnheader "Recording" [ref=e62]
+        - rowgroup [ref=e63]:
+          - row "6/15/2026, 2:38:53 PM s3eye-01 no face — view ↗" [ref=e64] [cursor=pointer]:
+            - cell "6/15/2026, 2:38:53 PM" [ref=e65]
+            - cell "s3eye-01" [ref=e66]
+            - cell "no face" [ref=e67]:
+              - generic [ref=e68]: no face
+            - cell "—" [ref=e69]
+            - cell "view ↗" [ref=e70]
+          - row "6/15/2026, 1:53:46 PM s3eye-01 unknown — view ↗" [ref=e71] [cursor=pointer]:
+            - cell "6/15/2026, 1:53:46 PM" [ref=e72]
+            - cell "s3eye-01" [ref=e73]
+            - cell "unknown" [ref=e74]:
+              - generic [ref=e75]: unknown
+            - cell "—" [ref=e76]
+            - cell "view ↗" [ref=e77]
+          - row "6/15/2026, 1:52:45 PM s3eye-01 unknown — view ↗" [ref=e78] [cursor=pointer]:
+            - cell "6/15/2026, 1:52:45 PM" [ref=e79]
+            - cell "s3eye-01" [ref=e80]
+            - cell "unknown" [ref=e81]:
+              - generic [ref=e82]: unknown
+            - cell "—" [ref=e83]
+            - cell "view ↗" [ref=e84]
+          - row "6/15/2026, 1:43:22 PM s3eye-01 unknown — view ↗" [ref=e85] [cursor=pointer]:
+            - cell "6/15/2026, 1:43:22 PM" [ref=e86]
+            - cell "s3eye-01" [ref=e87]
+            - cell "unknown" [ref=e88]:
+              - generic [ref=e89]: unknown
+            - cell "—" [ref=e90]
+            - cell "view ↗" [ref=e91]
+          - row "6/15/2026, 1:42:20 PM s3eye-01 unknown — view ↗" [ref=e92] [cursor=pointer]:
+            - cell "6/15/2026, 1:42:20 PM" [ref=e93]
+            - cell "s3eye-01" [ref=e94]
+            - cell "unknown" [ref=e95]:
+              - generic [ref=e96]: unknown
+            - cell "—" [ref=e97]
+            - cell "view ↗" [ref=e98]
+          - row "6/15/2026, 1:38:18 PM s3eye-01 unknown — view ↗" [ref=e99] [cursor=pointer]:
+            - cell "6/15/2026, 1:38:18 PM" [ref=e100]
+            - cell "s3eye-01" [ref=e101]
+            - cell "unknown" [ref=e102]:
+              - generic [ref=e103]: unknown
+            - cell "—" [ref=e104]
+            - cell "view ↗" [ref=e105]
+          - row "6/15/2026, 1:37:22 PM s3eye-01 unknown — —" [ref=e106] [cursor=pointer]:
+            - cell "6/15/2026, 1:37:22 PM" [ref=e107]
+            - cell "s3eye-01" [ref=e108]
+            - cell "unknown" [ref=e109]:
+              - generic [ref=e110]: unknown
+            - cell "—" [ref=e111]
+            - cell "—" [ref=e112]
+          - row "6/15/2026, 1:37:16 PM s3eye-01 unknown — view ↗" [ref=e113] [cursor=pointer]:
+            - cell "6/15/2026, 1:37:16 PM" [ref=e114]
+            - cell "s3eye-01" [ref=e115]
+            - cell "unknown" [ref=e116]:
+              - generic [ref=e117]: unknown
+            - cell "—" [ref=e118]
+            - cell "view ↗" [ref=e119]
+          - row "6/15/2026, 1:36:32 PM s3eye-01 unknown — —" [ref=e120] [cursor=pointer]:
+            - cell "6/15/2026, 1:36:32 PM" [ref=e121]
+            - cell "s3eye-01" [ref=e122]
+            - cell "unknown" [ref=e123]:
+              - generic [ref=e124]: unknown
+            - cell "—" [ref=e125]
+            - cell "—" [ref=e126]
+          - row "6/15/2026, 1:36:14 PM s3eye-01 unknown — view ↗" [ref=e127] [cursor=pointer]:
+            - cell "6/15/2026, 1:36:14 PM" [ref=e128]
+            - cell "s3eye-01" [ref=e129]
+            - cell "unknown" [ref=e130]:
+              - generic [ref=e131]: unknown
+            - cell "—" [ref=e132]
+            - cell "view ↗" [ref=e133]
+          - row "6/15/2026, 1:35:18 PM s3eye-01 unknown — —" [ref=e134] [cursor=pointer]:
+            - cell "6/15/2026, 1:35:18 PM" [ref=e135]
+            - cell "s3eye-01" [ref=e136]
+            - cell "unknown" [ref=e137]:
+              - generic [ref=e138]: unknown
+            - cell "—" [ref=e139]
+            - cell "—" [ref=e140]
+          - row "6/15/2026, 1:34:43 PM s3eye-01 authorized — —" [ref=e141] [cursor=pointer]:
+            - cell "6/15/2026, 1:34:43 PM" [ref=e142]
+            - cell "s3eye-01" [ref=e143]
+            - cell "authorized" [ref=e144]:
+              - generic [ref=e145]: authorized
+            - cell "—" [ref=e146]
+            - cell "—" [ref=e147]
+          - row "6/15/2026, 1:34:17 PM s3eye-01 unknown — —" [ref=e148] [cursor=pointer]:
+            - cell "6/15/2026, 1:34:17 PM" [ref=e149]
+            - cell "s3eye-01" [ref=e150]
+            - cell "unknown" [ref=e151]:
+              - generic [ref=e152]: unknown
+            - cell "—" [ref=e153]
+            - cell "—" [ref=e154]
+          - row "6/15/2026, 1:33:57 PM s3eye-01 authorized — —" [ref=e155] [cursor=pointer]:
+            - cell "6/15/2026, 1:33:57 PM" [ref=e156]
+            - cell "s3eye-01" [ref=e157]
+            - cell "authorized" [ref=e158]:
+              - generic [ref=e159]: authorized
+            - cell "—" [ref=e160]
+            - cell "—" [ref=e161]
+          - row "6/15/2026, 1:33:15 PM s3eye-01 unknown — —" [ref=e162] [cursor=pointer]:
+            - cell "6/15/2026, 1:33:15 PM" [ref=e163]
+            - cell "s3eye-01" [ref=e164]
+            - cell "unknown" [ref=e165]:
+              - generic [ref=e166]: unknown
+            - cell "—" [ref=e167]
+            - cell "—" [ref=e168]
+          - row "6/15/2026, 1:33:10 PM s3eye-01 unknown — view ↗" [ref=e169] [cursor=pointer]:
+            - cell "6/15/2026, 1:33:10 PM" [ref=e170]
+            - cell "s3eye-01" [ref=e171]
+            - cell "unknown" [ref=e172]:
+              - generic [ref=e173]: unknown
+            - cell "—" [ref=e174]
+            - cell "view ↗" [ref=e175]
+          - row "6/15/2026, 1:32:12 PM s3eye-01 unknown — —" [ref=e176] [cursor=pointer]:
+            - cell "6/15/2026, 1:32:12 PM" [ref=e177]
+            - cell "s3eye-01" [ref=e178]
+            - cell "unknown" [ref=e179]:
+              - generic [ref=e180]: unknown
+            - cell "—" [ref=e181]
+            - cell "—" [ref=e182]
+          - row "6/15/2026, 1:32:07 PM s3eye-01 unknown — view ↗" [ref=e183] [cursor=pointer]:
+            - cell "6/15/2026, 1:32:07 PM" [ref=e184]
+            - cell "s3eye-01" [ref=e185]
+            - cell "unknown" [ref=e186]:
+              - generic [ref=e187]: unknown
+            - cell "—" [ref=e188]
+            - cell "view ↗" [ref=e189]
+          - row "6/15/2026, 1:31:11 PM s3eye-01 unknown — —" [ref=e190] [cursor=pointer]:
+            - cell "6/15/2026, 1:31:11 PM" [ref=e191]
+            - cell "s3eye-01" [ref=e192]
+            - cell "unknown" [ref=e193]:
+              - generic [ref=e194]: unknown
+            - cell "—" [ref=e195]
+            - cell "—" [ref=e196]
+          - row "6/15/2026, 1:31:06 PM s3eye-01 unknown — view ↗" [ref=e197] [cursor=pointer]:
+            - cell "6/15/2026, 1:31:06 PM" [ref=e198]
+            - cell "s3eye-01" [ref=e199]
+            - cell "unknown" [ref=e200]:
+              - generic [ref=e201]: unknown
+            - cell "—" [ref=e202]
+            - cell "view ↗" [ref=e203]
+          - row "6/15/2026, 1:30:10 PM s3eye-01 unknown — —" [ref=e204] [cursor=pointer]:
+            - cell "6/15/2026, 1:30:10 PM" [ref=e205]
+            - cell "s3eye-01" [ref=e206]
+            - cell "unknown" [ref=e207]:
+              - generic [ref=e208]: unknown
+            - cell "—" [ref=e209]
+            - cell "—" [ref=e210]
+          - row "6/15/2026, 1:30:03 PM s3eye-01 unknown — view ↗" [ref=e211] [cursor=pointer]:
+            - cell "6/15/2026, 1:30:03 PM" [ref=e212]
+            - cell "s3eye-01" [ref=e213]
+            - cell "unknown" [ref=e214]:
+              - generic [ref=e215]: unknown
+            - cell "—" [ref=e216]
+            - cell "view ↗" [ref=e217]
+          - row "6/15/2026, 1:29:07 PM s3eye-01 unknown — —" [ref=e218] [cursor=pointer]:
+            - cell "6/15/2026, 1:29:07 PM" [ref=e219]
+            - cell "s3eye-01" [ref=e220]
+            - cell "unknown" [ref=e221]:
+              - generic [ref=e222]: unknown
+            - cell "—" [ref=e223]
+            - cell "—" [ref=e224]
+          - row "6/15/2026, 1:28:08 PM s3eye-01 authorized — —" [ref=e225] [cursor=pointer]:
+            - cell "6/15/2026, 1:28:08 PM" [ref=e226]
+            - cell "s3eye-01" [ref=e227]
+            - cell "authorized" [ref=e228]:
+              - generic [ref=e229]: authorized
+            - cell "—" [ref=e230]
+            - cell "—" [ref=e231]
+          - row "6/15/2026, 1:28:05 PM s3eye-01 unknown — —" [ref=e232] [cursor=pointer]:
+            - cell "6/15/2026, 1:28:05 PM" [ref=e233]
+            - cell "s3eye-01" [ref=e234]
+            - cell "unknown" [ref=e235]:
+              - generic [ref=e236]: unknown
+            - cell "—" [ref=e237]
+            - cell "—" [ref=e238]
+          - row "6/15/2026, 1:28:01 PM s3eye-01 unknown — view ↗" [ref=e239] [cursor=pointer]:
+            - cell "6/15/2026, 1:28:01 PM" [ref=e240]
+            - cell "s3eye-01" [ref=e241]
+            - cell "unknown" [ref=e242]:
+              - generic [ref=e243]: unknown
+            - cell "—" [ref=e244]
+            - cell "view ↗" [ref=e245]
+          - row "6/15/2026, 1:27:05 PM s3eye-01 unknown — —" [ref=e246] [cursor=pointer]:
+            - cell "6/15/2026, 1:27:05 PM" [ref=e247]
+            - cell "s3eye-01" [ref=e248]
+            - cell "unknown" [ref=e249]:
+              - generic [ref=e250]: unknown
+            - cell "—" [ref=e251]
+            - cell "—" [ref=e252]
+          - row "6/15/2026, 1:27:00 PM s3eye-01 unknown — view ↗" [ref=e253] [cursor=pointer]:
+            - cell "6/15/2026, 1:27:00 PM" [ref=e254]
+            - cell "s3eye-01" [ref=e255]
+            - cell "unknown" [ref=e256]:
+              - generic [ref=e257]: unknown
+            - cell "—" [ref=e258]
+            - cell "view ↗" [ref=e259]
+          - row "6/15/2026, 1:26:05 PM s3eye-01 unknown — —" [ref=e260] [cursor=pointer]:
+            - cell "6/15/2026, 1:26:05 PM" [ref=e261]
+            - cell "s3eye-01" [ref=e262]
+            - cell "unknown" [ref=e263]:
+              - generic [ref=e264]: unknown
+            - cell "—" [ref=e265]
+            - cell "—" [ref=e266]
+          - row "6/15/2026, 1:26:00 PM s3eye-01 unknown — view ↗" [ref=e267] [cursor=pointer]:
+            - cell "6/15/2026, 1:26:00 PM" [ref=e268]
+            - cell "s3eye-01" [ref=e269]
+            - cell "unknown" [ref=e270]:
+              - generic [ref=e271]: unknown
+            - cell "—" [ref=e272]
+            - cell "view ↗" [ref=e273]
+          - row "6/15/2026, 1:25:04 PM s3eye-01 unknown — —" [ref=e274] [cursor=pointer]:
+            - cell "6/15/2026, 1:25:04 PM" [ref=e275]
+            - cell "s3eye-01" [ref=e276]
+            - cell "unknown" [ref=e277]:
+              - generic [ref=e278]: unknown
+            - cell "—" [ref=e279]
+            - cell "—" [ref=e280]
+          - row "6/15/2026, 1:24:57 PM s3eye-01 unknown — view ↗" [ref=e281] [cursor=pointer]:
+            - cell "6/15/2026, 1:24:57 PM" [ref=e282]
+            - cell "s3eye-01" [ref=e283]
+            - cell "unknown" [ref=e284]:
+              - generic [ref=e285]: unknown
+            - cell "—" [ref=e286]
+            - cell "view ↗" [ref=e287]
+          - row "6/15/2026, 1:24:01 PM s3eye-01 unknown — —" [ref=e288] [cursor=pointer]:
+            - cell "6/15/2026, 1:24:01 PM" [ref=e289]
+            - cell "s3eye-01" [ref=e290]
+            - cell "unknown" [ref=e291]:
+              - generic [ref=e292]: unknown
+            - cell "—" [ref=e293]
+            - cell "—" [ref=e294]
+          - row "6/15/2026, 1:23:55 PM s3eye-01 unknown — view ↗" [ref=e295] [cursor=pointer]:
+            - cell "6/15/2026, 1:23:55 PM" [ref=e296]
+            - cell "s3eye-01" [ref=e297]
+            - cell "unknown" [ref=e298]:
+              - generic [ref=e299]: unknown
+            - cell "—" [ref=e300]
+            - cell "view ↗" [ref=e301]
+          - row "6/15/2026, 1:23:00 PM s3eye-01 unknown — —" [ref=e302] [cursor=pointer]:
+            - cell "6/15/2026, 1:23:00 PM" [ref=e303]
+            - cell "s3eye-01" [ref=e304]
+            - cell "unknown" [ref=e305]:
+              - generic [ref=e306]: unknown
+            - cell "—" [ref=e307]
+            - cell "—" [ref=e308]
+          - row "6/15/2026, 1:22:54 PM s3eye-01 unknown — view ↗" [ref=e309] [cursor=pointer]:
+            - cell "6/15/2026, 1:22:54 PM" [ref=e310]
+            - cell "s3eye-01" [ref=e311]
+            - cell "unknown" [ref=e312]:
+              - generic [ref=e313]: unknown
+            - cell "—" [ref=e314]
+            - cell "view ↗" [ref=e315]
+          - row "6/15/2026, 1:22:00 PM s3eye-01 unknown — —" [ref=e316] [cursor=pointer]:
+            - cell "6/15/2026, 1:22:00 PM" [ref=e317]
+            - cell "s3eye-01" [ref=e318]
+            - cell "unknown" [ref=e319]:
+              - generic [ref=e320]: unknown
+            - cell "—" [ref=e321]
+            - cell "—" [ref=e322]
+          - row "6/15/2026, 1:20:43 PM s3eye-01 unknown — —" [ref=e323] [cursor=pointer]:
+            - cell "6/15/2026, 1:20:43 PM" [ref=e324]
+            - cell "s3eye-01" [ref=e325]
+            - cell "unknown" [ref=e326]:
+              - generic [ref=e327]: unknown
+            - cell "—" [ref=e328]
+            - cell "—" [ref=e329]
+          - row "6/15/2026, 1:20:38 PM s3eye-01 unknown — view ↗" [ref=e330] [cursor=pointer]:
+            - cell "6/15/2026, 1:20:38 PM" [ref=e331]
+            - cell "s3eye-01" [ref=e332]
+            - cell "unknown" [ref=e333]:
+              - generic [ref=e334]: unknown
+            - cell "—" [ref=e335]
+            - cell "view ↗" [ref=e336]
+          - row "6/15/2026, 1:19:41 PM s3eye-01 unknown — —" [ref=e337] [cursor=pointer]:
+            - cell "6/15/2026, 1:19:41 PM" [ref=e338]
+            - cell "s3eye-01" [ref=e339]
+            - cell "unknown" [ref=e340]:
+              - generic [ref=e341]: unknown
+            - cell "—" [ref=e342]
+            - cell "—" [ref=e343]
+          - row "6/15/2026, 1:19:36 PM s3eye-01 unknown — view ↗" [ref=e344] [cursor=pointer]:
+            - cell "6/15/2026, 1:19:36 PM" [ref=e345]
+            - cell "s3eye-01" [ref=e346]
+            - cell "unknown" [ref=e347]:
+              - generic [ref=e348]: unknown
+            - cell "—" [ref=e349]
+            - cell "view ↗" [ref=e350]
+          - row "6/15/2026, 1:18:40 PM s3eye-01 unknown — —" [ref=e351] [cursor=pointer]:
+            - cell "6/15/2026, 1:18:40 PM" [ref=e352]
+            - cell "s3eye-01" [ref=e353]
+            - cell "unknown" [ref=e354]:
+              - generic [ref=e355]: unknown
+            - cell "—" [ref=e356]
+            - cell "—" [ref=e357]
+          - row "6/15/2026, 1:18:36 PM s3eye-01 unknown — view ↗" [ref=e358] [cursor=pointer]:
+            - cell "6/15/2026, 1:18:36 PM" [ref=e359]
+            - cell "s3eye-01" [ref=e360]
+            - cell "unknown" [ref=e361]:
+              - generic [ref=e362]: unknown
+            - cell "—" [ref=e363]
+            - cell "view ↗" [ref=e364]
+          - row "6/15/2026, 1:17:40 PM s3eye-01 unknown — —" [ref=e365] [cursor=pointer]:
+            - cell "6/15/2026, 1:17:40 PM" [ref=e366]
+            - cell "s3eye-01" [ref=e367]
+            - cell "unknown" [ref=e368]:
+              - generic [ref=e369]: unknown
+            - cell "—" [ref=e370]
+            - cell "—" [ref=e371]
+          - row "6/15/2026, 1:17:36 PM s3eye-01 unknown — view ↗" [ref=e372] [cursor=pointer]:
+            - cell "6/15/2026, 1:17:36 PM" [ref=e373]
+            - cell "s3eye-01" [ref=e374]
+            - cell "unknown" [ref=e375]:
+              - generic [ref=e376]: unknown
+            - cell "—" [ref=e377]
+            - cell "view ↗" [ref=e378]
+          - row "6/15/2026, 1:16:39 PM s3eye-01 unknown — —" [ref=e379] [cursor=pointer]:
+            - cell "6/15/2026, 1:16:39 PM" [ref=e380]
+            - cell "s3eye-01" [ref=e381]
+            - cell "unknown" [ref=e382]:
+              - generic [ref=e383]: unknown
+            - cell "—" [ref=e384]
+            - cell "—" [ref=e385]
+          - row "6/15/2026, 1:16:34 PM s3eye-01 unknown — view ↗" [ref=e386] [cursor=pointer]:
+            - cell "6/15/2026, 1:16:34 PM" [ref=e387]
+            - cell "s3eye-01" [ref=e388]
+            - cell "unknown" [ref=e389]:
+              - generic [ref=e390]: unknown
+            - cell "—" [ref=e391]
+            - cell "view ↗" [ref=e392]
+          - row "6/15/2026, 1:15:39 PM s3eye-01 unknown — —" [ref=e393] [cursor=pointer]:
+            - cell "6/15/2026, 1:15:39 PM" [ref=e394]
+            - cell "s3eye-01" [ref=e395]
+            - cell "unknown" [ref=e396]:
+              - generic [ref=e397]: unknown
+            - cell "—" [ref=e398]
+            - cell "—" [ref=e399]
+          - row "6/15/2026, 1:15:34 PM s3eye-01 unknown — view ↗" [ref=e400] [cursor=pointer]:
+            - cell "6/15/2026, 1:15:34 PM" [ref=e401]
+            - cell "s3eye-01" [ref=e402]
+            - cell "unknown" [ref=e403]:
+              - generic [ref=e404]: unknown
+            - cell "—" [ref=e405]
+            - cell "view ↗" [ref=e406]
+          - row "6/15/2026, 1:14:38 PM s3eye-01 unknown — —" [ref=e407] [cursor=pointer]:
+            - cell "6/15/2026, 1:14:38 PM" [ref=e408]
+            - cell "s3eye-01" [ref=e409]
+            - cell "unknown" [ref=e410]:
+              - generic [ref=e411]: unknown
+            - cell "—" [ref=e412]
+            - cell "—" [ref=e413]
+          - row "6/15/2026, 1:14:33 PM s3eye-01 unknown — view ↗" [ref=e414] [cursor=pointer]:
+            - cell "6/15/2026, 1:14:33 PM" [ref=e415]
+            - cell "s3eye-01" [ref=e416]
+            - cell "unknown" [ref=e417]:
+              - generic [ref=e418]: unknown
+            - cell "—" [ref=e419]
+            - cell "view ↗" [ref=e420]
+          - row "6/15/2026, 1:13:37 PM s3eye-01 unknown — —" [ref=e421] [cursor=pointer]:
+            - cell "6/15/2026, 1:13:37 PM" [ref=e422]
+            - cell "s3eye-01" [ref=e423]
+            - cell "unknown" [ref=e424]:
+              - generic [ref=e425]: unknown
+            - cell "—" [ref=e426]
+            - cell "—" [ref=e427]
+          - row "6/15/2026, 1:13:32 PM s3eye-01 unknown — view ↗" [ref=e428] [cursor=pointer]:
+            - cell "6/15/2026, 1:13:32 PM" [ref=e429]
+            - cell "s3eye-01" [ref=e430]
+            - cell "unknown" [ref=e431]:
+              - generic [ref=e432]: unknown
+            - cell "—" [ref=e433]
+            - cell "view ↗" [ref=e434]
+          - row "6/15/2026, 1:12:38 PM s3eye-01 unknown — —" [ref=e435] [cursor=pointer]:
+            - cell "6/15/2026, 1:12:38 PM" [ref=e436]
+            - cell "s3eye-01" [ref=e437]
+            - cell "unknown" [ref=e438]:
+              - generic [ref=e439]: unknown
+            - cell "—" [ref=e440]
+            - cell "—" [ref=e441]
+          - row "6/15/2026, 1:12:30 PM s3eye-01 unknown — view ↗" [ref=e442] [cursor=pointer]:
+            - cell "6/15/2026, 1:12:30 PM" [ref=e443]
+            - cell "s3eye-01" [ref=e444]
+            - cell "unknown" [ref=e445]:
+              - generic [ref=e446]: unknown
+            - cell "—" [ref=e447]
+            - cell "view ↗" [ref=e448]
+          - row "6/15/2026, 1:11:34 PM s3eye-01 unknown — —" [ref=e449] [cursor=pointer]:
+            - cell "6/15/2026, 1:11:34 PM" [ref=e450]
+            - cell "s3eye-01" [ref=e451]
+            - cell "unknown" [ref=e452]:
+              - generic [ref=e453]: unknown
+            - cell "—" [ref=e454]
+            - cell "—" [ref=e455]
+          - row "6/15/2026, 1:11:29 PM s3eye-01 unknown — view ↗" [ref=e456] [cursor=pointer]:
+            - cell "6/15/2026, 1:11:29 PM" [ref=e457]
+            - cell "s3eye-01" [ref=e458]
+            - cell "unknown" [ref=e459]:
+              - generic [ref=e460]: unknown
+            - cell "—" [ref=e461]
+            - cell "view ↗" [ref=e462]
+          - row "6/15/2026, 1:10:32 PM s3eye-01 unknown — —" [ref=e463] [cursor=pointer]:
+            - cell "6/15/2026, 1:10:32 PM" [ref=e464]
+            - cell "s3eye-01" [ref=e465]
+            - cell "unknown" [ref=e466]:
+              - generic [ref=e467]: unknown
+            - cell "—" [ref=e468]
+            - cell "—" [ref=e469]
+          - row "6/15/2026, 1:10:27 PM s3eye-01 unknown — view ↗" [ref=e470] [cursor=pointer]:
+            - cell "6/15/2026, 1:10:27 PM" [ref=e471]
+            - cell "s3eye-01" [ref=e472]
+            - cell "unknown" [ref=e473]:
+              - generic [ref=e474]: unknown
+            - cell "—" [ref=e475]
+            - cell "view ↗" [ref=e476]
+          - row "6/15/2026, 1:09:31 PM s3eye-01 unknown — —" [ref=e477] [cursor=pointer]:
+            - cell "6/15/2026, 1:09:31 PM" [ref=e478]
+            - cell "s3eye-01" [ref=e479]
+            - cell "unknown" [ref=e480]:
+              - generic [ref=e481]: unknown
+            - cell "—" [ref=e482]
+            - cell "—" [ref=e483]
+          - row "6/15/2026, 1:09:27 PM s3eye-01 unknown — view ↗" [ref=e484] [cursor=pointer]:
+            - cell "6/15/2026, 1:09:27 PM" [ref=e485]
+            - cell "s3eye-01" [ref=e486]
+            - cell "unknown" [ref=e487]:
+              - generic [ref=e488]: unknown
+            - cell "—" [ref=e489]
+            - cell "view ↗" [ref=e490]
+          - row "6/15/2026, 1:08:37 PM s3eye-01 unknown — —" [ref=e491] [cursor=pointer]:
+            - cell "6/15/2026, 1:08:37 PM" [ref=e492]
+            - cell "s3eye-01" [ref=e493]
+            - cell "unknown" [ref=e494]:
+              - generic [ref=e495]: unknown
+            - cell "—" [ref=e496]
+            - cell "—" [ref=e497]
+          - row "6/15/2026, 1:08:25 PM s3eye-01 unknown — view ↗" [ref=e498] [cursor=pointer]:
+            - cell "6/15/2026, 1:08:25 PM" [ref=e499]
+            - cell "s3eye-01" [ref=e500]
+            - cell "unknown" [ref=e501]:
+              - generic [ref=e502]: unknown
+            - cell "—" [ref=e503]
+            - cell "view ↗" [ref=e504]
+          - row "6/15/2026, 1:07:30 PM s3eye-01 unknown — —" [ref=e505] [cursor=pointer]:
+            - cell "6/15/2026, 1:07:30 PM" [ref=e506]
+            - cell "s3eye-01" [ref=e507]
+            - cell "unknown" [ref=e508]:
+              - generic [ref=e509]: unknown
+            - cell "—" [ref=e510]
+            - cell "—" [ref=e511]
+          - row "6/15/2026, 1:07:22 PM s3eye-01 unknown — view ↗" [ref=e512] [cursor=pointer]:
+            - cell "6/15/2026, 1:07:22 PM" [ref=e513]
+            - cell "s3eye-01" [ref=e514]
+            - cell "unknown" [ref=e515]:
+              - generic [ref=e516]: unknown
+            - cell "—" [ref=e517]
+            - cell "view ↗" [ref=e518]
+          - row "6/15/2026, 1:06:27 PM s3eye-01 unknown — —" [ref=e519] [cursor=pointer]:
+            - cell "6/15/2026, 1:06:27 PM" [ref=e520]
+            - cell "s3eye-01" [ref=e521]
+            - cell "unknown" [ref=e522]:
+              - generic [ref=e523]: unknown
+            - cell "—" [ref=e524]
+            - cell "—" [ref=e525]
+          - row "6/15/2026, 1:04:36 PM s3eye-01 authorized — —" [ref=e526] [cursor=pointer]:
+            - cell "6/15/2026, 1:04:36 PM" [ref=e527]
+            - cell "s3eye-01" [ref=e528]
+            - cell "authorized" [ref=e529]:
+              - generic [ref=e530]: authorized
+            - cell "—" [ref=e531]
+            - cell "—" [ref=e532]
+          - row "6/15/2026, 1:04:23 PM s3eye-01 unknown — —" [ref=e533] [cursor=pointer]:
+            - cell "6/15/2026, 1:04:23 PM" [ref=e534]
+            - cell "s3eye-01" [ref=e535]
+            - cell "unknown" [ref=e536]:
+              - generic [ref=e537]: unknown
+            - cell "—" [ref=e538]
+            - cell "—" [ref=e539]
+          - row "6/15/2026, 1:03:40 PM s3eye-01 authorized — —" [ref=e540] [cursor=pointer]:
+            - cell "6/15/2026, 1:03:40 PM" [ref=e541]
+            - cell "s3eye-01" [ref=e542]
+            - cell "authorized" [ref=e543]:
+              - generic [ref=e544]: authorized
+            - cell "—" [ref=e545]
+            - cell "—" [ref=e546]
+          - row "6/15/2026, 1:03:21 PM s3eye-01 unknown — —" [ref=e547] [cursor=pointer]:
+            - cell "6/15/2026, 1:03:21 PM" [ref=e548]
+            - cell "s3eye-01" [ref=e549]
+            - cell "unknown" [ref=e550]:
+              - generic [ref=e551]: unknown
+            - cell "—" [ref=e552]
+            - cell "—" [ref=e553]
+          - row "6/15/2026, 1:02:15 PM s3eye-01 authorized — —" [ref=e554] [cursor=pointer]:
+            - cell "6/15/2026, 1:02:15 PM" [ref=e555]
+            - cell "s3eye-01" [ref=e556]
+            - cell "authorized" [ref=e557]:
+              - generic [ref=e558]: authorized
+            - cell "—" [ref=e559]
+            - cell "—" [ref=e560]
+          - row "6/15/2026, 1:02:06 PM s3eye-01 unknown — —" [ref=e561] [cursor=pointer]:
+            - cell "6/15/2026, 1:02:06 PM" [ref=e562]
+            - cell "s3eye-01" [ref=e563]
+            - cell "unknown" [ref=e564]:
+              - generic [ref=e565]: unknown
+            - cell "—" [ref=e566]
+            - cell "—" [ref=e567]
+          - row "6/15/2026, 1:01:00 PM s3eye-01 authorized 58.4% —" [ref=e568] [cursor=pointer]:
+            - cell "6/15/2026, 1:01:00 PM" [ref=e569]
+            - cell "s3eye-01" [ref=e570]
+            - cell "authorized" [ref=e571]:
+              - generic [ref=e572]: authorized
+            - cell "58.4%" [ref=e573]
+            - cell "—" [ref=e574]
+          - row "6/15/2026, 12:59:59 PM s3eye-01 unknown — —" [ref=e575] [cursor=pointer]:
+            - cell "6/15/2026, 12:59:59 PM" [ref=e576]
+            - cell "s3eye-01" [ref=e577]
+            - cell "unknown" [ref=e578]:
+              - generic [ref=e579]: unknown
+            - cell "—" [ref=e580]
+            - cell "—" [ref=e581]
+          - row "6/15/2026, 12:59:48 PM s3eye-01 unknown — view ↗" [ref=e582] [cursor=pointer]:
+            - cell "6/15/2026, 12:59:48 PM" [ref=e583]
+            - cell "s3eye-01" [ref=e584]
+            - cell "unknown" [ref=e585]:
+              - generic [ref=e586]: unknown
+            - cell "—" [ref=e587]
+            - cell "view ↗" [ref=e588]
+          - row "6/15/2026, 12:59:48 PM s3eye-01 authorized 63.9% —" [ref=e589] [cursor=pointer]:
+            - cell "6/15/2026, 12:59:48 PM" [ref=e590]
+            - cell "s3eye-01" [ref=e591]
+            - cell "authorized" [ref=e592]:
+              - generic [ref=e593]: authorized
+            - cell "63.9%" [ref=e594]
+            - cell "—" [ref=e595]
+          - row "6/15/2026, 12:59:45 PM s3eye-01 unknown — —" [ref=e596] [cursor=pointer]:
+            - cell "6/15/2026, 12:59:45 PM" [ref=e597]
+            - cell "s3eye-01" [ref=e598]
+            - cell "unknown" [ref=e599]:
+              - generic [ref=e600]: unknown
+            - cell "—" [ref=e601]
+            - cell "—" [ref=e602]
+          - row "6/15/2026, 12:59:18 PM s3eye-01 unknown — —" [ref=e603] [cursor=pointer]:
+            - cell "6/15/2026, 12:59:18 PM" [ref=e604]
+            - cell "s3eye-01" [ref=e605]
+            - cell "unknown" [ref=e606]:
+              - generic [ref=e607]: unknown
+            - cell "—" [ref=e608]
+            - cell "—" [ref=e609]
+          - row "6/15/2026, 12:56:18 PM s3eye-01 no face — view ↗" [ref=e610] [cursor=pointer]:
+            - cell "6/15/2026, 12:56:18 PM" [ref=e611]
+            - cell "s3eye-01" [ref=e612]
+            - cell "no face" [ref=e613]:
+              - generic [ref=e614]: no face
+            - cell "—" [ref=e615]
+            - cell "view ↗" [ref=e616]
+          - row "6/15/2026, 12:51:14 PM s3eye-01 no face — view ↗" [ref=e617] [cursor=pointer]:
+            - cell "6/15/2026, 12:51:14 PM" [ref=e618]
+            - cell "s3eye-01" [ref=e619]
+            - cell "no face" [ref=e620]:
+              - generic [ref=e621]: no face
+            - cell "—" [ref=e622]
+            - cell "view ↗" [ref=e623]
+          - row "6/15/2026, 11:31:42 AM s3eye-01 no face — view ↗" [ref=e624] [cursor=pointer]:
+            - cell "6/15/2026, 11:31:42 AM" [ref=e625]
+            - cell "s3eye-01" [ref=e626]
+            - cell "no face" [ref=e627]:
+              - generic [ref=e628]: no face
+            - cell "—" [ref=e629]
+            - cell "view ↗" [ref=e630]
+          - row "6/15/2026, 11:01:36 AM s3eye-01 unknown — view ↗" [ref=e631] [cursor=pointer]:
+            - cell "6/15/2026, 11:01:36 AM" [ref=e632]
+            - cell "s3eye-01" [ref=e633]
+            - cell "unknown" [ref=e634]:
+              - generic [ref=e635]: unknown
+            - cell "—" [ref=e636]
+            - cell "view ↗" [ref=e637]
+          - row "6/15/2026, 10:01:25 AM s3eye-01 no face — view ↗" [ref=e638] [cursor=pointer]:
+            - cell "6/15/2026, 10:01:25 AM" [ref=e639]
+            - cell "s3eye-01" [ref=e640]
+            - cell "no face" [ref=e641]:
+              - generic [ref=e642]: no face
+            - cell "—" [ref=e643]
+            - cell "view ↗" [ref=e644]
+          - row "6/15/2026, 9:58:21 AM s3eye-01 no face — view ↗" [ref=e645] [cursor=pointer]:
+            - cell "6/15/2026, 9:58:21 AM" [ref=e646]
+            - cell "s3eye-01" [ref=e647]
+            - cell "no face" [ref=e648]:
+              - generic [ref=e649]: no face
+            - cell "—" [ref=e650]
+            - cell "view ↗" [ref=e651]
+          - row "6/15/2026, 9:51:20 AM s3eye-01 unknown — view ↗" [ref=e652] [cursor=pointer]:
+            - cell "6/15/2026, 9:51:20 AM" [ref=e653]
+            - cell "s3eye-01" [ref=e654]
+            - cell "unknown" [ref=e655]:
+              - generic [ref=e656]: unknown
+            - cell "—" [ref=e657]
+            - cell "view ↗" [ref=e658]
+          - row "6/15/2026, 8:42:33 AM xiao-01 authorized 56.3% —" [ref=e659] [cursor=pointer]:
+            - cell "6/15/2026, 8:42:33 AM" [ref=e660]
+            - cell "xiao-01" [ref=e661]
+            - cell "authorized" [ref=e662]:
+              - generic [ref=e663]: authorized
+            - cell "56.3%" [ref=e664]
+            - cell "—" [ref=e665]
+          - row "6/15/2026, 8:39:55 AM xiao-01 unknown — view ↗" [ref=e666] [cursor=pointer]:
+            - cell "6/15/2026, 8:39:55 AM" [ref=e667]
+            - cell "xiao-01" [ref=e668]
+            - cell "unknown" [ref=e669]:
+              - generic [ref=e670]: unknown
+            - cell "—" [ref=e671]
+            - cell "view ↗" [ref=e672]
+          - row "6/15/2026, 8:39:02 AM xiao-01 unknown — —" [ref=e673] [cursor=pointer]:
+            - cell "6/15/2026, 8:39:02 AM" [ref=e674]
+            - cell "xiao-01" [ref=e675]
+            - cell "unknown" [ref=e676]:
+              - generic [ref=e677]: unknown
+            - cell "—" [ref=e678]
+            - cell "—" [ref=e679]
+          - row "6/15/2026, 8:38:16 AM xiao-01 unknown — —" [ref=e680] [cursor=pointer]:
+            - cell "6/15/2026, 8:38:16 AM" [ref=e681]
+            - cell "xiao-01" [ref=e682]
+            - cell "unknown" [ref=e683]:
+              - generic [ref=e684]: unknown
+            - cell "—" [ref=e685]
+            - cell "—" [ref=e686]
+          - row "6/15/2026, 8:38:05 AM xiao-01 unknown — view ↗" [ref=e687] [cursor=pointer]:
+            - cell "6/15/2026, 8:38:05 AM" [ref=e688]
+            - cell "xiao-01" [ref=e689]
+            - cell "unknown" [ref=e690]:
+              - generic [ref=e691]: unknown
+            - cell "—" [ref=e692]
+            - cell "view ↗" [ref=e693]
+          - row "6/15/2026, 8:37:16 AM xiao-01 unknown — —" [ref=e694] [cursor=pointer]:
+            - cell "6/15/2026, 8:37:16 AM" [ref=e695]
+            - cell "xiao-01" [ref=e696]
+            - cell "unknown" [ref=e697]:
+              - generic [ref=e698]: unknown
+            - cell "—" [ref=e699]
+            - cell "—" [ref=e700]
+          - row "6/15/2026, 8:37:02 AM xiao-01 unknown — view ↗" [ref=e701] [cursor=pointer]:
+            - cell "6/15/2026, 8:37:02 AM" [ref=e702]
+            - cell "xiao-01" [ref=e703]
+            - cell "unknown" [ref=e704]:
+              - generic [ref=e705]: unknown
+            - cell "—" [ref=e706]
+            - cell "view ↗" [ref=e707]
+          - row "6/15/2026, 8:36:10 AM xiao-01 unknown — —" [ref=e708] [cursor=pointer]:
+            - cell "6/15/2026, 8:36:10 AM" [ref=e709]
+            - cell "xiao-01" [ref=e710]
+            - cell "unknown" [ref=e711]:
+              - generic [ref=e712]: unknown
+            - cell "—" [ref=e713]
+            - cell "—" [ref=e714]
+          - row "6/15/2026, 8:36:00 AM xiao-01 unknown — view ↗" [ref=e715] [cursor=pointer]:
+            - cell "6/15/2026, 8:36:00 AM" [ref=e716]
+            - cell "xiao-01" [ref=e717]
+            - cell "unknown" [ref=e718]:
+              - generic [ref=e719]: unknown
+            - cell "—" [ref=e720]
+            - cell "view ↗" [ref=e721]
+          - row "6/15/2026, 8:35:56 AM xiao-01 unknown — —" [ref=e722] [cursor=pointer]:
+            - cell "6/15/2026, 8:35:56 AM" [ref=e723]
+            - cell "xiao-01" [ref=e724]
+            - cell "unknown" [ref=e725]:
+              - generic [ref=e726]: unknown
+            - cell "—" [ref=e727]
+            - cell "—" [ref=e728]
+          - row "6/15/2026, 8:30:51 AM s3eye-01 authorized 57.0% —" [ref=e729] [cursor=pointer]:
+            - cell "6/15/2026, 8:30:51 AM" [ref=e730]
+            - cell "s3eye-01" [ref=e731]
+            - cell "authorized" [ref=e732]:
+              - generic [ref=e733]: authorized
+            - cell "57.0%" [ref=e734]
+            - cell "—" [ref=e735]
+          - row "6/15/2026, 8:21:36 AM s3eye-01 unknown — view ↗" [ref=e736] [cursor=pointer]:
+            - cell "6/15/2026, 8:21:36 AM" [ref=e737]
+            - cell "s3eye-01" [ref=e738]
+            - cell "unknown" [ref=e739]:
+              - generic [ref=e740]: unknown
+            - cell "—" [ref=e741]
+            - cell "view ↗" [ref=e742]
+          - row "6/15/2026, 8:21:35 AM s3eye-01 unknown — —" [ref=e743] [cursor=pointer]:
+            - cell "6/15/2026, 8:21:35 AM" [ref=e744]
+            - cell "s3eye-01" [ref=e745]
+            - cell "unknown" [ref=e746]:
+              - generic [ref=e747]: unknown
+            - cell "—" [ref=e748]
+            - cell "—" [ref=e749]
+          - row "6/14/2026, 6:27:16 AM xiao-01 unknown — view ↗" [ref=e750] [cursor=pointer]:
+            - cell "6/14/2026, 6:27:16 AM" [ref=e751]
+            - cell "xiao-01" [ref=e752]
+            - cell "unknown" [ref=e753]:
+              - generic [ref=e754]: unknown
+            - cell "—" [ref=e755]
+            - cell "view ↗" [ref=e756]
+          - row "6/13/2026, 2:25:32 PM xiao-01 unknown — view ↗" [ref=e757] [cursor=pointer]:
+            - cell "6/13/2026, 2:25:32 PM" [ref=e758]
+            - cell "xiao-01" [ref=e759]
+            - cell "unknown" [ref=e760]:
+              - generic [ref=e761]: unknown
+            - cell "—" [ref=e762]
+            - cell "view ↗" [ref=e763]

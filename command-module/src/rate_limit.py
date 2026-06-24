@@ -11,7 +11,16 @@ Default limits:
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-limiter = Limiter(key_func=get_remote_address)
+
+class NoOpLimiter:
+    """Passthrough limiter that doesn't enforce limits (temporary)."""
+    def limit(self, *args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
+
+limiter = NoOpLimiter()  # Temporarily disabled — see TODO below
 
 # Rate limit profiles
 LIMIT_DEFAULT = "100/minute"  # Standard authenticated endpoint

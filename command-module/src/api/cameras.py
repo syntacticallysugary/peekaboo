@@ -4,7 +4,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from auth import verify_api_key
@@ -91,7 +91,7 @@ class EdgeReportRequest(BaseModel):
 
 @router.post("/register", status_code=201)
 @limiter.limit("10/minute")
-async def register(req: RegisterRequest, _: str = Depends(verify_api_key)):
+async def register(request: Request, req: RegisterRequest, _: str = Depends(verify_api_key)):
     cam = await camera_registry.register_camera(req.camera_id, req.type, req.ip, req.stream_url)
     await log_camera_registered(actor="api", camera_id=cam.camera_id, camera_type=req.type, ip=req.ip)
     return {"camera_id": cam.camera_id, "status": cam.status}

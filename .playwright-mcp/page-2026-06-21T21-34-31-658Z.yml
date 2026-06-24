@@ -1,0 +1,523 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic "Skip navigation links":
+      - generic:
+        - link "Skip to last reply" [ref=e4] [cursor=pointer]:
+          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/10
+        - link "Skip to top" [ref=e5] [cursor=pointer]:
+          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/1
+      - link "Skip to main content" [ref=e6] [cursor=pointer]:
+        - /url: "#main-container"
+    - generic [ref=e11]:
+      - button "Sidebar" [expanded] [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+      - link "Seeed Studio Forum" [ref=e17] [cursor=pointer]:
+        - /url: /
+        - img "Seeed Studio Forum" [ref=e18]
+      - navigation [ref=e19]:
+        - generic [ref=e21]:
+          - button "Sign Up" [ref=e22] [cursor=pointer]:
+            - generic [ref=e23]: Sign Up
+          - button "Log In" [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+            - generic [ref=e26]: Log In
+        - list [ref=e27]:
+          - listitem [ref=e28]:
+            - button "Search" [ref=e29] [cursor=pointer]:
+              - img [ref=e30]
+    - main [ref=e31]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - list [ref=e37]:
+            - listitem [ref=e38]:
+              - link "Topics" [ref=e39] [cursor=pointer]:
+                - /url: /latest
+                - img [ref=e41]
+                - generic [ref=e42]: Topics
+            - listitem [ref=e43]:
+              - button "More" [ref=e44] [cursor=pointer]:
+                - img [ref=e46]
+                - generic [ref=e47]: More
+          - generic [ref=e48]:
+            - button "Categories" [expanded] [ref=e50] [cursor=pointer]:
+              - img [ref=e52]
+              - generic [ref=e53]: Categories
+            - list [ref=e54]:
+              - listitem [ref=e55]:
+                - link "Products & Technology" [ref=e56] [cursor=pointer]:
+                  - /url: /c/products/6
+                  - generic [ref=e59]: Products & Technology
+              - listitem [ref=e60]:
+                - link "Excellent Forum Solutions" [ref=e61] [cursor=pointer]:
+                  - /url: /c/solution/101
+                  - generic [ref=e64]: Excellent Forum Solutions
+              - listitem [ref=e65]:
+                - link "SenseCraft" [ref=e66] [cursor=pointer]:
+                  - /url: /c/sensecraft/103
+                  - generic [ref=e69]: SenseCraft
+              - listitem [ref=e70]:
+                - link "reComputer AI Lab" [ref=e71] [cursor=pointer]:
+                  - /url: /c/recomputer-ai-lab/108
+                  - generic [ref=e74]: reComputer AI Lab
+              - listitem [ref=e75]:
+                - link "Community" [ref=e76] [cursor=pointer]:
+                  - /url: /c/community/5
+                  - generic [ref=e79]: Community
+              - listitem [ref=e80]:
+                - link "All categories" [ref=e81] [cursor=pointer]:
+                  - /url: /categories
+                  - img [ref=e83]
+                  - generic [ref=e84]: All categories
+          - generic [ref=e85]:
+            - button "Tags" [expanded] [ref=e87] [cursor=pointer]:
+              - img [ref=e89]
+              - generic [ref=e90]: Tags
+            - list [ref=e91]:
+              - listitem [ref=e92]:
+                - link "xiao" [ref=e93] [cursor=pointer]:
+                  - /url: /tag/xiao
+                  - img [ref=e95]
+                  - generic [ref=e96]: xiao
+              - listitem [ref=e97]:
+                - link "nrf52840" [ref=e98] [cursor=pointer]:
+                  - /url: /tag/nrf52840
+                  - img [ref=e100]
+                  - generic [ref=e101]: nrf52840
+              - listitem [ref=e102]:
+                - link "xiao-esp32c3" [ref=e103] [cursor=pointer]:
+                  - /url: /tag/xiao-esp32c3
+                  - img [ref=e105]
+                  - generic [ref=e106]: xiao-esp32c3
+              - listitem [ref=e107]:
+                - link "grove" [ref=e108] [cursor=pointer]:
+                  - /url: /tag/grove
+                  - img [ref=e110]
+                  - generic [ref=e111]: grove
+              - listitem [ref=e112]:
+                - link "xiao-esp32s3" [ref=e113] [cursor=pointer]:
+                  - /url: /tag/xiao-esp32s3
+                  - img [ref=e115]
+                  - generic [ref=e116]: xiao-esp32s3
+              - listitem [ref=e117]:
+                - link "All tags" [ref=e118] [cursor=pointer]:
+                  - /url: /tags
+                  - img [ref=e120]
+                  - generic [ref=e121]: All tags
+        - button "Keyboard Shortcuts" [ref=e125] [cursor=pointer]:
+          - img [ref=e126]
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - generic [ref=e130]:
+            - heading "Xiao ESP32S3 Custom Reset and Boot Buttons" [level=1] [ref=e131]:
+              - generic "This topic has a solution" [ref=e133]:
+                - img [ref=e134]
+              - link "Xiao ESP32S3 Custom Reset and Boot Buttons" [ref=e135] [cursor=pointer]:
+                - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623
+            - generic [ref=e136]:
+              - link "Products & Technology" [ref=e137] [cursor=pointer]:
+                - /url: /c/products/6
+                - generic "Community supported product related questions, routinely checked by Seeed’s Engineers" [ref=e138]:
+                  - generic [ref=e139]: Products & Technology
+              - link "XIAO" [ref=e140] [cursor=pointer]:
+                - /url: /c/products/xiao/91
+                - generic [ref=e142]: XIAO
+              - list "Tags" [ref=e145]:
+                - link "xiao-esp32s3" [ref=e146] [cursor=pointer]:
+                  - /url: /tag/xiao-esp32s3
+          - generic [ref=e147]:
+            - generic [ref=e150]:
+              - button "2.0k views" [ref=e151] [cursor=pointer]:
+                - generic [ref=e152]: 2.0k
+                - generic [ref=e153]: views
+              - button "3 links" [ref=e154] [cursor=pointer]:
+                - generic [ref=e155]: "3"
+                - generic [ref=e156]: links
+              - generic [ref=e157]:
+                - link "OzerO's profile" [ref=e159] [cursor=pointer]:
+                  - /url: /u/OzerO
+                  - img "OzerO" [ref=e160]
+                - link "nugnugnug's profile" [ref=e162] [cursor=pointer]:
+                  - /url: /u/nugnugnug
+                  - img "nugnugnug" [ref=e163]
+                - link "PJ_Glasso's profile" [ref=e165] [cursor=pointer]:
+                  - /url: /u/PJ_Glasso
+                  - img "PJ Glasso" [ref=e166]
+                - link "Seeed_Harrison's profile" [ref=e168] [cursor=pointer]:
+                  - /url: /u/Seeed_Harrison
+                  - img "Harrison Xu" [ref=e169]
+                - link "dtek's profile" [ref=e171] [cursor=pointer]:
+                  - /url: /u/dtek
+                  - img "dtek" [ref=e172]
+            - navigation "topic progress" [ref=e174]:
+              - generic [ref=e175]:
+                - generic [ref=e176]: "1"
+                - generic [ref=e177]: /
+                - generic [ref=e178]: "10"
+            - generic [ref=e182]:
+              - generic [ref=e183]:
+                - heading "post by OzerO on Oct 30, 2024" [level=2] [ref=e184]
+                - article "post by OzerO on Oct 30, 2024" [ref=e185]:
+                  - generic [ref=e186]:
+                    - link "OzerO's profile" [ref=e189] [cursor=pointer]:
+                      - /url: /u/ozero
+                    - generic [ref=e190]:
+                      - generic [ref=e191]:
+                        - link "OzerO's profile" [ref=e194] [cursor=pointer]:
+                          - /url: /u/ozero
+                          - text: OzerO
+                        - link "Oct 2024" [ref=e197] [cursor=pointer]:
+                          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623
+                      - generic [ref=e198]:
+                        - generic [ref=e199]:
+                          - paragraph [ref=e200]:
+                            - text: I’ll have a bunch of questions about the ESP32S3 (non-sense
+                            - img ":slight_smile:" [ref=e201]
+                            - text: ). Keeping them in seperate threads to focus on one question at a time.
+                          - paragraph [ref=e202]:
+                            - text: My first one is about adding some custom buttons for Reset and Boot, as it is such a pain to press these on the board. I want to solder custom push buttons, but I am not sure where to. I see an “EN” and “GND” pad on the back. I will try to short EN to GND for the reset, but how about the boot button? I see a section for the
+                            - link "strapping pins link clicked 19 times" [ref=e203] [cursor=pointer]:
+                              - /url: https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/#strapping-pins
+                              - text: strapping pins 19
+                            - text: in the wiki, but I can’t decipher if these map to any physical pins on the board.
+                          - paragraph [ref=e204]: Note, I am using the ESP32S3 (non-sense) with the ePaper breakout board.
+                          - paragraph [ref=e205]: Thanks.
+                        - complementary [ref=e206]:
+                          - generic [ref=e207] [cursor=pointer]:
+                            - generic [ref=e209]:
+                              - img [ref=e210]
+                              - text: Solved by
+                              - link "OzerO's profile" [ref=e212]:
+                                - /url: /u/ozero
+                                - text: OzerO
+                              - text: in
+                              - link "post 6" [ref=e214]:
+                                - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/6
+                            - generic [ref=e215]:
+                              - button "Expand" [ref=e216]:
+                                - img [ref=e217]
+                              - link "go to the quoted post" [ref=e218]:
+                                - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/6
+                                - img [ref=e219]
+                          - blockquote [ref=e220]:
+                            - generic [ref=e221]: "I think I need to be a little creative here. I’m thinking: Option 1: If I reset via EN pin, the wakeup reason is “not timer”, and I can delay putting the device into deep sleep for a minute or so, which will give me the time to flash. (Hit reset button, then flash). Handle it in the default: sectio…"
+                        - generic [ref=e222]:
+                          - navigation [ref=e223]:
+                            - generic [ref=e224]:
+                              - generic [ref=e225]:
+                                - button "1" [ref=e226] [cursor=pointer]
+                                - button "like this post" [ref=e227] [cursor=pointer]:
+                                  - img [ref=e228]
+                              - button "copy a link to this post to clipboard" [ref=e229] [cursor=pointer]:
+                                - img [ref=e230]
+                          - generic:
+                            - list
+                  - generic [ref=e233]:
+                    - button "2.0k views" [ref=e234] [cursor=pointer]:
+                      - generic [ref=e235]: 2.0k
+                      - generic [ref=e236]: views
+                    - button "3 links" [ref=e237] [cursor=pointer]:
+                      - generic [ref=e238]: "3"
+                      - generic [ref=e239]: links
+                    - generic [ref=e240]:
+                      - link "OzerO's profile" [ref=e242] [cursor=pointer]:
+                        - /url: /u/OzerO
+                        - img "OzerO" [ref=e243]
+                      - link "nugnugnug's profile" [ref=e245] [cursor=pointer]:
+                        - /url: /u/nugnugnug
+                        - img "nugnugnug" [ref=e246]
+                      - link "PJ_Glasso's profile" [ref=e248] [cursor=pointer]:
+                        - /url: /u/PJ_Glasso
+                        - img "PJ Glasso" [ref=e249]
+                      - link "Seeed_Harrison's profile" [ref=e251] [cursor=pointer]:
+                        - /url: /u/Seeed_Harrison
+                        - img "Harrison Xu" [ref=e252]
+                      - link "dtek's profile" [ref=e254] [cursor=pointer]:
+                        - /url: /u/dtek
+                        - img "dtek" [ref=e255]
+              - generic [ref=e256]:
+                - heading "post by PJ_Glasso on Oct 30, 2024" [level=2] [ref=e257]
+                - article "post by PJ_Glasso on Oct 30, 2024" [ref=e258]:
+                  - generic [ref=e259]:
+                    - link "PJ_Glasso's profile" [ref=e262] [cursor=pointer]:
+                      - /url: /u/pj_glasso
+                    - generic [ref=e263]:
+                      - generic [ref=e264]:
+                        - generic [ref=e265]:
+                          - link "PJ_Glasso's profile" [ref=e267] [cursor=pointer]:
+                            - /url: /u/pj_glasso
+                            - text: PJ_Glasso
+                          - generic [ref=e268]: Regular
+                        - link "Oct 2024" [ref=e271] [cursor=pointer]:
+                          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/2
+                      - generic [ref=e272]:
+                        - paragraph [ref=e274]:
+                          - text: Hi there,
+                          - text: SO let’s keep it in one thread so we don’t have to jump around.
+                          - text: The strapping pins are important when needing certain options at boot time.
+                          - text: Refer to the
+                          - link "technical reference guide link clicked 85 times" [ref=e275] [cursor=pointer]:
+                            - /url: https://files.waveshare.com/upload/1/11/Esp32-s3_technical_reference_manual_en.pdf
+                            - text: technical reference guide 85
+                          - text: for the ESP32S3 NO they do not use the Peripheral multiplexor so they can’t be reassigned. They are however latched at boot time so you can use them as pins after that. (most people and designs stay away from that)
+                          - text: As indicated in the other thread, Look at the
+                          - strong [ref=e276]: schematic
+                          - text: ", it and the"
+                          - strong [ref=e277]: pins xls
+                          - text: spreadsheet are on the resources section of the wiki, READ it, come back ask more good questions LOL
+                          - img ":+1:" [ref=e278]
+                          - img ":smile:" [ref=e279]
+                        - generic [ref=e280]:
+                          - navigation [ref=e281]:
+                            - generic [ref=e282]:
+                              - button "like this post" [ref=e284] [cursor=pointer]:
+                                - img [ref=e285]
+                              - button "copy a link to this post to clipboard" [ref=e286] [cursor=pointer]:
+                                - img [ref=e287]
+                          - generic:
+                            - list
+              - generic [ref=e288]:
+                - heading "post by OzerO on Oct 30, 2024" [level=2] [ref=e289]
+                - article "post by OzerO on Oct 30, 2024" [ref=e290]:
+                  - generic [ref=e291]:
+                    - link "OzerO's profile" [ref=e294] [cursor=pointer]:
+                      - /url: /u/ozero
+                    - generic [ref=e295]:
+                      - generic [ref=e296]:
+                        - link "OzerO's profile" [ref=e299] [cursor=pointer]:
+                          - /url: /u/ozero
+                          - text: OzerO
+                        - link "Oct 2024" [ref=e302] [cursor=pointer]:
+                          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/3
+                      - generic [ref=e303]:
+                        - paragraph [ref=e305]: From the schematic, it looks like GPIO_0 is not connected anywhere other than the BOOT button on the board, which means I cannot easily solder my own boot button at all. Am I reading the schematic wrong?
+                        - generic [ref=e306]:
+                          - navigation [ref=e307]:
+                            - generic [ref=e308]:
+                              - button "like this post" [ref=e310] [cursor=pointer]:
+                                - img [ref=e311]
+                              - button "copy a link to this post to clipboard" [ref=e312] [cursor=pointer]:
+                                - img [ref=e313]
+                          - generic:
+                            - list
+              - generic [ref=e314]:
+                - heading "post by Seeed_Harrison on Oct 31, 2024" [level=2] [ref=e315]
+                - article "post by Seeed_Harrison on Oct 31, 2024" [ref=e316]:
+                  - generic [ref=e317]:
+                    - generic [ref=e319]:
+                      - link "Seeed_Harrison's profile" [ref=e320] [cursor=pointer]:
+                        - /url: /u/seeed_harrison
+                      - generic "Seeed" [ref=e321]
+                    - generic [ref=e322]:
+                      - generic [ref=e323]:
+                        - generic [ref=e324]:
+                          - link "Seeed_Harrison's profile" [ref=e326] [cursor=pointer]:
+                            - /url: /u/seeed_harrison
+                            - text: Seeed_Harrison
+                            - generic "This user is a moderator" [ref=e327]:
+                              - img [ref=e328]
+                          - generic [ref=e329]: 领导者
+                        - generic [ref=e330]:
+                          - button "post edit history" [ref=e332] [cursor=pointer]:
+                            - img [ref=e333]
+                            - generic [ref=e334]: "1"
+                          - link "Oct 2024" [ref=e336] [cursor=pointer]:
+                            - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/4
+                      - generic [ref=e337]:
+                        - paragraph [ref=e339]:
+                          - text: Unfortunately, yes.
+                          - text: According to its
+                          - link "schematic link clicked 50 times" [ref=e340] [cursor=pointer]:
+                            - /url: https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_SCH_v1.2.pdf
+                            - text: schematic 50
+                          - text: ", the BOOT button links to"
+                          - code [ref=e341]: GPIO0
+                          - text: which is not connected to anywhere else.
+                          - text: But in most cases we don’t need to push this button, right?
+                        - generic [ref=e342]:
+                          - navigation [ref=e343]:
+                            - generic [ref=e344]:
+                              - button "like this post" [ref=e346] [cursor=pointer]:
+                                - img [ref=e347]
+                              - button "copy a link to this post to clipboard" [ref=e348] [cursor=pointer]:
+                                - img [ref=e349]
+                          - generic:
+                            - list
+              - generic [ref=e350]:
+                - heading "post by OzerO on Oct 31, 2024" [level=2] [ref=e351]
+                - article "post by OzerO on Oct 31, 2024" [ref=e352]:
+                  - generic [ref=e353]:
+                    - link "OzerO's profile" [ref=e356] [cursor=pointer]:
+                      - /url: /u/ozero
+                    - generic [ref=e357]:
+                      - generic [ref=e358]:
+                        - link "OzerO's profile" [ref=e361] [cursor=pointer]:
+                          - /url: /u/ozero
+                          - text: OzerO
+                        - link "Oct 2024" [ref=e364] [cursor=pointer]:
+                          - /url: /t/xiao-esp32s3-custom-reset-and-boot-buttons/283623/5
+                      - generic [ref=e365]:
+                        - paragraph [ref=e367]: Most cases, right, but I am working on an ePaper solution, and on this project, most of the time the esp32 is in deep sleep mode. Even if I reset, it goes back into deep sleep in a few seconds (just update the screen, then deep sleep). So I cannot flash the device most of the time. Therefore putting it into boot loader mode is convenient.
+                        - generic [ref=e368]:
+                          - navigation [ref=e369]:
+                            - generic [ref=e370]:
+                              - generic [ref=e371]:
+                                - button "1" [ref=e372] [cursor=pointer]
+                                - button "like this post" [ref=e373] [cursor=pointer]:
+                                  - img [ref=e374]
+                              - button "copy a link to this post to clipboard" [ref=e375] [cursor=pointer]:
+                                - img [ref=e376]
+                          - generic:
+                            - list
+              - heading "post by OzerO on Oct 31, 2024" [level=2] [ref=e378]
+              - generic [ref=e381]: 10 months later
+              - heading "post by nugnugnug on Sep 4, 2025" [level=2] [ref=e383]
+              - heading "post by OzerO on Sep 4, 2025" [level=2] [ref=e385]
+              - heading "post by nugnugnug on Sep 4, 2025" [level=2] [ref=e387]
+              - generic [ref=e390]: 12 days later
+              - heading "post by dtek on Sep 16, 2025" [level=2] [ref=e392]
+          - region [ref=e395]:
+            - button "Reply" [ref=e397] [cursor=pointer]:
+              - img [ref=e398]
+              - generic [ref=e399]: Reply
+          - generic [ref=e400]:
+            - complementary "New & Unread Topics" [ref=e402]:
+              - heading "New & Unread Topics" [level=3] [ref=e403]
+              - table "Topic list, column headers with buttons are sortable." [ref=e407]:
+                - caption [ref=e408]: Topic list, column headers with buttons are sortable.
+                - rowgroup [ref=e409]:
+                  - row "Topic Replies Activity" [ref=e410]:
+                    - columnheader "Topic" [ref=e411]:
+                      - generic [ref=e412]: Topic
+                    - columnheader "Replies" [ref=e413]:
+                      - generic [ref=e414]: Replies
+                    - columnheader "Activity" [ref=e415]:
+                      - generic [ref=e416]: Activity
+                - rowgroup [ref=e417]:
+                  - row "XIAO ESP32-C3 using BAT+ / - (LAB power supply) does not wake. USB power all fine! XIAO Tags 18 replies, jump to first post 3d" [ref=e418]:
+                    - cell "XIAO ESP32-C3 using BAT+ / - (LAB power supply) does not wake. USB power all fine! XIAO Tags" [ref=e419]:
+                      - heading "XIAO ESP32-C3 using BAT+ / - (LAB power supply) does not wake. USB power all fine!" [level=2] [ref=e420]:
+                        - generic "This topic has a solution" [ref=e422]:
+                          - img [ref=e423]
+                        - link "XIAO ESP32-C3 using BAT+ / - (LAB power supply) does not wake. USB power all fine!" [ref=e424] [cursor=pointer]:
+                          - /url: /t/xiao-esp32-c3-using-bat-lab-power-supply-does-not-wake-usb-power-all-fine/295390
+                      - generic [ref=e425]:
+                        - link "XIAO" [ref=e426] [cursor=pointer]:
+                          - /url: /c/products/xiao/91
+                          - generic [ref=e428]: XIAO
+                        - list "Tags" [ref=e429]:
+                          - link "xiao-esp32c3" [ref=e430] [cursor=pointer]:
+                            - /url: /tag/xiao-esp32c3
+                          - link "batterypower" [ref=e431] [cursor=pointer]:
+                            - /url: /tag/batterypower
+                          - link "deepsleep" [ref=e432] [cursor=pointer]:
+                            - /url: /tag/deepsleep
+                    - cell "18 replies, jump to first post" [ref=e433]:
+                      - link "18 replies, jump to first post" [ref=e434] [cursor=pointer]:
+                        - /url: /t/xiao-esp32-c3-using-bat-lab-power-supply-does-not-wake-usb-power-all-fine/295390/1
+                        - text: "18"
+                    - cell "3d" [ref=e435]:
+                      - link "3d" [ref=e436] [cursor=pointer]:
+                        - /url: /t/xiao-esp32-c3-using-bat-lab-power-supply-does-not-wake-usb-power-all-fine/295390/19
+                  - 'row "MG24: Time synchronization - how? XIAO Tags 5 replies, jump to first post May 6" [ref=e437]':
+                    - 'cell "MG24: Time synchronization - how? XIAO Tags" [ref=e438]':
+                      - 'heading "MG24: Time synchronization - how?" [level=2] [ref=e439]':
+                        - 'link "MG24: Time synchronization - how?" [ref=e440] [cursor=pointer]':
+                          - /url: /t/mg24-time-synchronization-how/295372
+                      - generic [ref=e441]:
+                        - link "XIAO" [ref=e442] [cursor=pointer]:
+                          - /url: /c/products/xiao/91
+                          - generic [ref=e444]: XIAO
+                        - list "Tags" [ref=e445]:
+                          - link "mg24" [ref=e446] [cursor=pointer]:
+                            - /url: /tag/mg24
+                    - cell "5 replies, jump to first post" [ref=e447]:
+                      - link "5 replies, jump to first post" [ref=e448] [cursor=pointer]:
+                        - /url: /t/mg24-time-synchronization-how/295372/1
+                        - text: "5"
+                    - cell "May 6" [ref=e449]:
+                      - link "May 6" [ref=e450] [cursor=pointer]:
+                        - /url: /t/mg24-time-synchronization-how/295372/6
+                  - row "No output on UART Xiao NRF52840 sense + GPS Quectel L76K XIAO Tags 3 replies, jump to first post Apr 9" [ref=e451]:
+                    - cell "No output on UART Xiao NRF52840 sense + GPS Quectel L76K XIAO Tags" [ref=e452]:
+                      - heading "No output on UART Xiao NRF52840 sense + GPS Quectel L76K" [level=2] [ref=e453]:
+                        - link "No output on UART Xiao NRF52840 sense + GPS Quectel L76K" [ref=e454] [cursor=pointer]:
+                          - /url: /t/no-output-on-uart-xiao-nrf52840-sense-gps-quectel-l76k/295268
+                      - generic [ref=e455]:
+                        - link "XIAO" [ref=e456] [cursor=pointer]:
+                          - /url: /c/products/xiao/91
+                          - generic [ref=e458]: XIAO
+                        - list "Tags" [ref=e459]:
+                          - link "nrf52840" [ref=e460] [cursor=pointer]:
+                            - /url: /tag/nrf52840
+                          - link "gps" [ref=e461] [cursor=pointer]:
+                            - /url: /tag/gps
+                          - link "uart" [ref=e462] [cursor=pointer]:
+                            - /url: /tag/uart
+                    - cell "3 replies, jump to first post" [ref=e463]:
+                      - link "3 replies, jump to first post" [ref=e464] [cursor=pointer]:
+                        - /url: /t/no-output-on-uart-xiao-nrf52840-sense-gps-quectel-l76k/295268/1
+                        - text: "3"
+                    - cell "Apr 9" [ref=e465]:
+                      - link "Apr 9" [ref=e466] [cursor=pointer]:
+                        - /url: /t/no-output-on-uart-xiao-nrf52840-sense-gps-quectel-l76k/295268/4
+                  - row "XIAO NRF52840 sense board cannot recognize keywords (Voice) XIAO Tags 1 reply, jump to first post Feb 27" [ref=e467]:
+                    - cell "XIAO NRF52840 sense board cannot recognize keywords (Voice) XIAO Tags" [ref=e468]:
+                      - heading "XIAO NRF52840 sense board cannot recognize keywords (Voice)" [level=2] [ref=e469]:
+                        - generic "This topic has a solution" [ref=e471]:
+                          - img [ref=e472]
+                        - link "XIAO NRF52840 sense board cannot recognize keywords (Voice)" [ref=e473] [cursor=pointer]:
+                          - /url: /t/xiao-nrf52840-sense-board-cannot-recognize-keywords-voice/295078
+                      - generic [ref=e474]:
+                        - link "XIAO" [ref=e475] [cursor=pointer]:
+                          - /url: /c/products/xiao/91
+                          - generic [ref=e477]: XIAO
+                        - list "Tags" [ref=e478]:
+                          - link "xiao" [ref=e479] [cursor=pointer]:
+                            - /url: /tag/xiao
+                          - link "nrf52840" [ref=e480] [cursor=pointer]:
+                            - /url: /tag/nrf52840
+                    - cell "1 reply, jump to first post" [ref=e481]:
+                      - link "1 reply, jump to first post" [ref=e482] [cursor=pointer]:
+                        - /url: /t/xiao-nrf52840-sense-board-cannot-recognize-keywords-voice/295078/1
+                        - text: "1"
+                    - cell "Feb 27" [ref=e483]:
+                      - link "Feb 27" [ref=e484] [cursor=pointer]:
+                        - /url: /t/xiao-nrf52840-sense-board-cannot-recognize-keywords-voice/295078/2
+                  - 'row "star_struck XIAO 2025 in Review: Trends Shaping the XIAO Ecosystem XIAO Tags 0 replies, jump to first post Feb 20" [ref=e485]':
+                    - 'cell "star_struck XIAO 2025 in Review: Trends Shaping the XIAO Ecosystem XIAO Tags" [ref=e486]':
+                      - 'heading "star_struck XIAO 2025 in Review: Trends Shaping the XIAO Ecosystem" [level=2] [ref=e487]':
+                        - 'link "star_struck XIAO 2025 in Review: Trends Shaping the XIAO Ecosystem" [ref=e488] [cursor=pointer]':
+                          - /url: /t/xiao-2025-in-review-trends-shaping-the-xiao-ecosystem/295058
+                          - img "star_struck"
+                          - text: "XIAO 2025 in Review: Trends Shaping the XIAO Ecosystem"
+                      - generic [ref=e489]:
+                        - link "XIAO" [ref=e490] [cursor=pointer]:
+                          - /url: /c/products/xiao/91
+                          - generic [ref=e492]: XIAO
+                        - list "Tags" [ref=e493]:
+                          - link "xiao" [ref=e494] [cursor=pointer]:
+                            - /url: /tag/xiao
+                    - cell "0 replies, jump to first post" [ref=e495]:
+                      - link "0 replies, jump to first post" [ref=e496] [cursor=pointer]:
+                        - /url: /t/xiao-2025-in-review-trends-shaping-the-xiao-ecosystem/295058/1
+                        - text: "0"
+                    - cell "Feb 20" [ref=e497]:
+                      - link "Feb 20" [ref=e498] [cursor=pointer]:
+                        - /url: /t/xiao-2025-in-review-trends-shaping-the-xiao-ecosystem/295058/1
+            - heading "Want to read more? Browse other topics in XIAO or view latest topics." [level=3] [ref=e499]:
+              - text: Want to read more? Browse other topics in
+              - link "XIAO" [ref=e500] [cursor=pointer]:
+                - /url: /c/products/xiao/91
+                - generic [ref=e502]: XIAO
+              - text: or
+              - link "view latest topics" [ref=e503] [cursor=pointer]:
+                - /url: /latest
+              - text: .
+        - dialog "User card"
+      - link "Powered by Discourse" [ref=e504] [cursor=pointer]:
+        - /url: https://discourse.org/powered-by
+        - generic [ref=e505]:
+          - img [ref=e507]
+          - generic [ref=e508]: Powered by Discourse
+  - status [ref=e509]
+  - alert [ref=e510]

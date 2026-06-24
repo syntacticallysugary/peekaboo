@@ -1,0 +1,29 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]: peekaboo.ai
+    - generic [ref=e5]:
+      - link "Dashboard" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Events" [ref=e7] [cursor=pointer]:
+        - /url: /events
+      - link "Persons" [ref=e8] [cursor=pointer]:
+        - /url: /persons
+  - main [ref=e9]:
+    - generic [ref=e778]:
+      - generic [ref=e779]:
+        - button "← Back" [ref=e780] [cursor=pointer]
+        - paragraph [ref=e781]: Alert Detail
+        - heading "Event" [level=2] [ref=e783]
+      - generic [ref=e784]:
+        - generic [ref=e785]:
+          - generic [ref=e786]: Classification
+          - generic [ref=e787]: unknown
+        - generic [ref=e788]:
+          - generic [ref=e789]: Camera
+          - generic [ref=e790] [cursor=pointer]: s3eye-01 ↗
+        - generic [ref=e791]:
+          - generic [ref=e792]: Timestamp
+          - generic [ref=e793]: 6/15/2026, 1:53:46 PM
+      - generic [ref=e794]:
+        - paragraph [ref=e795]: Footage
+        - paragraph [ref=e800]: 30962aec-b921-420c-a1e7-1afbf1d68535/recording.mp4

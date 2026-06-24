@@ -1,0 +1,66 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]: peekaboo.ai
+    - generic [ref=e5]:
+      - link "Dashboard" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Events" [ref=e7] [cursor=pointer]:
+        - /url: /events
+      - link "Persons" [ref=e8] [cursor=pointer]:
+        - /url: /persons
+      - link "Settings" [active] [ref=e9] [cursor=pointer]:
+        - /url: /settings
+  - main [ref=e10]:
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - paragraph [ref=e66]: Configuration
+        - heading "Settings" [level=2] [ref=e68]
+      - generic [ref=e69]:
+        - paragraph [ref=e70]: Firmware (OTA)
+        - paragraph [ref=e72]: Cameras poll their channel every 5 minutes and pull a new binary automatically when the version changes.
+        - generic [ref=e73]:
+          - text: Version to assign on next upload
+          - textbox "1.1.0" [ref=e74]
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]: s3eye
+              - generic [ref=e79]: v1.0.0 · 1013 KB · 6/15/2026, 10:07:25 PM
+            - button "Upload .bin" [ref=e80] [cursor=pointer]
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - generic [ref=e83]: xiao
+              - generic [ref=e84]: v1.0.0 · 1013 KB · 6/15/2026, 10:15:19 PM
+            - button "Upload .bin" [ref=e85] [cursor=pointer]
+      - separator [ref=e86]
+      - generic [ref=e87]:
+        - paragraph [ref=e88]: Arm / Disarm Schedule
+        - paragraph [ref=e90]: Optional. Times are server-local, 24-hour. A manual Arm/Disarm on the dashboard always takes effect immediately — the schedule only acts at these two times, so it won't fight a manual change made in between.
+        - generic [ref=e91]:
+          - generic [ref=e92]:
+            - checkbox "Enable schedule" [ref=e93]
+            - text: Enable schedule
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - generic [ref=e96]: Arm at
+              - textbox [disabled] [ref=e97]
+            - generic [ref=e98]:
+              - generic [ref=e99]: Disarm at
+              - textbox [disabled] [ref=e100]
+          - button "Save Schedule" [ref=e102] [cursor=pointer]
+      - separator [ref=e103]
+      - generic [ref=e104]:
+        - paragraph [ref=e105]: Webhooks
+        - paragraph [ref=e107]:
+          - text: Every detection event is POSTed to all active webhook URLs. Set a secret to receive an
+          - code [ref=e108]: X-Peekaboo-Signature
+          - text: HMAC header for verification.
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]: URL
+            - textbox "https://example.com/peekaboo-hook" [ref=e112]
+          - generic [ref=e113]:
+            - generic [ref=e114]: Secret (optional)
+            - textbox "shared signing secret" [ref=e115]
+          - button "Add Webhook" [disabled] [ref=e117]
+        - paragraph [ref=e118]: No webhooks registered.

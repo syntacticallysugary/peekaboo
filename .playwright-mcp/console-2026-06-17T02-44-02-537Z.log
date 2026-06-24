@@ -1,0 +1,23 @@
+[    2924ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[   20723ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://localhost:8081/api/cameras/xiao-01/diag:0
+[  971270ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[40384233ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[40389098ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[44619650ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[44755231ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[51617989ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[51956031ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[52967966ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[54999830ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[55015350ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[55084321ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[55793394ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-gnatAxOM.js:24
+[55793405ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-gnatAxOM.js:24
+[65769444ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[70716533ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[72589568ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[78490427ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[78657095ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[80185244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:8081/api/events?camera_id=xiao-01&limit=10:0
+[83871306ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-gnatAxOM.js:24
+[83871316ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-gnatAxOM.js:24

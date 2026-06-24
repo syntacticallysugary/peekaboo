@@ -106,6 +106,7 @@ class EventModel(Base):
     person_id = Column(String(255), ForeignKey("persons.person_id"), nullable=True)
     confidence = Column(Float, nullable=True)
     recording_path = Column(String(255), nullable=True)
+    best_frame = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
@@ -129,8 +130,11 @@ class SystemModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=False)
     armed = Column(Boolean, default=False)
     schedule_enabled = Column(Boolean, default=False)
+    enabled = Column(Boolean, default=True)
     schedule_arm_time = Column(String(8), nullable=True)
     schedule_disarm_time = Column(String(8), nullable=True)
+    disarm_time = Column(String(8), nullable=True)
+    arm_time = Column(String(8), nullable=True)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
@@ -307,8 +311,8 @@ async def init_postgres() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def get_db() -> Database:
-    """Get database client."""
+def get_db() -> Database:
+    """Get database client (creates session on demand)."""
     if _AsyncSessionLocal is None:
         raise RuntimeError("PostgreSQL not initialized — call init_postgres() at startup")
     session = _AsyncSessionLocal()

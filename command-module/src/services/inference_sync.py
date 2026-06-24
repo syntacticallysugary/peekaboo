@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-from google.cloud.firestore_v1 import FieldFilter
 
 from config import settings
 from db.postgres import PERSONS, get_db
@@ -17,8 +16,11 @@ async def sync_identities_to_edge() -> bool:
     db = get_db()
 
     candidates: list[dict] = []
-    async for doc in db.collection(PERSONS).where(filter=FieldFilter("is_blocked", "==", False)).stream():
+    async for doc in db.collection(PERSONS).stream():
         data = doc.to_dict()
+        # Skip blocked persons
+        if data.get("is_blocked", False):
+            continue
         for emb in data.get("embeddings", []):
             candidates.append({
                 "person_id": doc.id,

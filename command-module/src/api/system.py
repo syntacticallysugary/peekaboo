@@ -3,7 +3,7 @@ import re
 
 from auth import verify_api_key
 from rate_limit import limiter
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from services import scheduler, system_state

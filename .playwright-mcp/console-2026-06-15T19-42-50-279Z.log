@@ -1,0 +1,2 @@
+[       6ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8081/events/b36a8150-7e1f-4458-ba44-9a4866240b07:0
+[      15ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8081/favicon.ico:0

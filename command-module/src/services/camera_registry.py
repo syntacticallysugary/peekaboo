@@ -6,8 +6,6 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from google.cloud.firestore_v1 import FieldFilter
-
 from config import settings
 from db.postgres import CAMERAS, get_db
 from db.models import Camera
@@ -59,17 +57,23 @@ async def _health_loop() -> None:
         await asyncio.sleep(10)
         now = datetime.now(timezone.utc)
         db = get_db()
-        async for doc in db.collection(CAMERAS).where(filter=FieldFilter("status", "==", "connected")).stream():
+
+        # Get all cameras and check status
+        async for doc in db.collection(CAMERAS).stream():
             data = doc.to_dict()
+            status = data.get("status")
+            if status != "connected":
+                continue
+
             last_seen = data.get("last_seen")
             if last_seen is None:
                 continue
-            # Firestore returns datetime objects with tzinfo
+            # Ensure timezone-aware
             if last_seen.tzinfo is None:
                 last_seen = last_seen.replace(tzinfo=timezone.utc)
             age = (now - last_seen).total_seconds()
             if age > timeout:
-                await doc.reference.update({"status": "disconnected"})
+                await db.collection(CAMERAS).document(doc.id).update({"status": "disconnected"})
                 logger.warning("Camera %s timed out (last seen %.0fs ago)", doc.id, age)
                 await ws_manager.broadcast({
                     "type": "camera_status",

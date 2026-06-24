@@ -1,0 +1,41 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]: peekaboo.ai
+    - generic [ref=e5]:
+      - link "Dashboard" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Events" [ref=e7] [cursor=pointer]:
+        - /url: /events
+      - link "Persons" [ref=e8] [cursor=pointer]:
+        - /url: /persons
+      - link "Settings" [ref=e9] [cursor=pointer]:
+        - /url: /settings
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - paragraph [ref=e14]: System
+          - heading "Dashboard" [level=2] [ref=e16]
+        - generic [ref=e17]:
+          - generic [ref=e18]: offline
+          - button "Arm" [disabled] [ref=e19]
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e24]: Command Module
+          - generic [ref=e25]: FastAPI + LangGraph
+        - generic [ref=e26]:
+          - generic [ref=e29]: Inference (Jetson)
+          - generic [ref=e30]: buffalo_l · GPU
+        - generic [ref=e31]:
+          - generic [ref=e34]: WebSocket
+          - generic [ref=e35]: live
+      - separator [ref=e36]
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - paragraph [ref=e40]: Cameras
+          - button "+ Register Camera" [ref=e42] [cursor=pointer]
+        - paragraph [ref=e44]: No cameras registered.
+      - separator [ref=e45]
+      - generic [ref=e46]:
+        - paragraph [ref=e47]: Live Feed
+        - paragraph [ref=e50]: Waiting for events…

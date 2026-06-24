@@ -1,0 +1,7 @@
+[  999871ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[25234535ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[55470847ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[56731160ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[56761865ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[57235201ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
+[75040295ms] [ERROR] WebSocket connection to 'ws://localhost:8081/ws/dashboard' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:8081/assets/index-GfaJQ9Cq.js:24
