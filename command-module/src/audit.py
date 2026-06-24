@@ -1,6 +1,6 @@
 """Audit logging for security events and state changes.
 
-Logs are written to Firestore collection 'audit_logs' with:
+Logs are written to PostgreSQL 'audit_logs' table with:
 - Timestamp (UTC)
 - Event type (enum)
 - Actor (API key, service name)
@@ -13,7 +13,7 @@ import logging
 from datetime import datetime, timezone
 from enum import Enum
 
-from db.firestore import get_db
+from db.postgres import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ async def log_audit_event(
     success: bool = True,
     error_reason: str | None = None,
 ) -> None:
-    """Log an audit event to Firestore.
+    """Log an audit event to PostgreSQL.
 
     Args:
         event_type: Type of event (from AuditEventType enum)
@@ -90,7 +90,7 @@ async def log_audit_event(
             "details": details or {},
         }
 
-        # Add to Firestore (auto-generates document ID)
+        # Insert into audit_logs table (auto-generates ID)
         await db.collection(AUDIT_COLLECTION).add(doc_data)
 
     except Exception as exc:

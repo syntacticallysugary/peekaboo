@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from config import settings
-from db.firestore import PERSONS, get_db
+from db.postgres import PERSONS, get_db
 from services.inference_client import inference_client
 from services.inference_sync import sync_identities_to_edge
 

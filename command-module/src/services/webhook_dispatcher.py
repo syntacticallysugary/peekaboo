@@ -9,7 +9,7 @@ import httpx
 from google.cloud.firestore_v1 import FieldFilter
 
 from config import settings
-from db.firestore import WEBHOOKS, get_db
+from db.postgres import WEBHOOKS, get_db
 from services.event_queue import DetectionEvent, event_bus
 
 logger = logging.getLogger(__name__)

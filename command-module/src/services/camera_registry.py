@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from google.cloud.firestore_v1 import FieldFilter
 
 from config import settings
-from db.firestore import CAMERAS, get_db
+from db.postgres import CAMERAS, get_db
 from db.models import Camera
 from websocket.manager import ws_manager
 

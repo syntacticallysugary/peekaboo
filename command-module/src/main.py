@@ -18,7 +18,7 @@ from api import alerts, cameras, events, firmware, persons, recordings, system, 
 from auth import verify_api_key
 from config import settings
 from rate_limit import limiter
-from db.firestore import init_firestore
+from db.postgres import init_postgres, close_postgres
 from orchestration.workflow import guard_workflow  # noqa: F401 — triggers graph compilation
 from services import camera_registry, scheduler, system_state, webhook_dispatcher
 from services.inference_client import inference_client
@@ -34,7 +34,7 @@ _bg_tasks: list[asyncio.Task] = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_firestore()
+    await init_postgres()
     await system_state.load()
     await scheduler.load()
     webhook_dispatcher.register()
@@ -48,6 +48,7 @@ async def lifespan(app: FastAPI):
     camera_registry.stop()
     for task in _bg_tasks:
         task.cancel()
+    await close_postgres()
     await inference_client.close()
     logger.info("Peekaboo Command Module shut down")
 

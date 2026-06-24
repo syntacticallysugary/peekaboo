@@ -11,7 +11,7 @@ from auth import verify_api_key
 from audit import log_camera_deleted, log_camera_registered
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from config import settings
-from db.firestore import CAMERAS, EVENTS, PERSONS, get_db
+from db.postgres import CAMERAS, EVENTS, PERSONS, get_db
 from validation import validate_camera_id
 from orchestration.state import SystemState, TriggerEvent
 from orchestration.workflow import guard_workflow

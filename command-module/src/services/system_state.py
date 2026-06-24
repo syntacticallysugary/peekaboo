@@ -6,7 +6,7 @@ event, webhook delivery, and dashboard notification.
 """
 import logging
 
-from db.firestore import SYSTEM, get_db
+from db.postgres import SYSTEM, get_db
 
 logger = logging.getLogger(__name__)
 

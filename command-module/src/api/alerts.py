@@ -8,7 +8,7 @@ from rate_limit import limiter
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from db.firestore import EVENTS, get_db
+from db.postgres import EVENTS, get_db
 from services import system_state
 from services.event_queue import DetectionEvent as BusEvent, event_bus
 from websocket.manager import ws_manager

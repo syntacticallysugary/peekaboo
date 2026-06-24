@@ -40,7 +40,7 @@ Three tiers communicate over a local WiFi network:
 │                      │    │ • YOLOv8n person detector  │    │ • FastAPI REST API      │
 │ • JPEG frame stream  │───►│ • InsightFace recognition  │───►│ • Person registry       │
 │ • Motion heartbeat   │    │   (buffalo_l model)        │    │ • Alert dispatch        │
-│ • MQTT control       │    │ • Session management       │    │ • Firestore database    │
+│ • MQTT control       │    │ • Session management       │    │ • PostgreSQL database   │
 │ • OTA updates        │    │ • Arm/disarm enforcement   │    │ • MQTT broker           │
 │                      │    │                            │    │ • WebSocket dashboard   │
 └──────────────────────┘    └───────────────────────────┘    └─────────────────────────┘
@@ -112,7 +112,7 @@ This project showcases real-world IoT architecture patterns:
 | Command Module | R5 (`192.168.1.105`) | `8081` | FastAPI; `network_mode: host` |
 | Inference Service | Jetson (`192.168.1.108`) | `8001` | FastAPI + InsightFace; NVIDIA runtime |
 | Person Detector | Jetson (`192.168.1.108`) | `8002` | YOLOv8n ONNX; CPU-only sidecar |
-| Firestore (Google Cloud) | Cloud | — | Person embeddings, audit logs, events, webhooks |
+| PostgreSQL | R5 | `5432` | Person embeddings, audit logs, events, webhooks |
 | Mosquitto MQTT | R5 | `8883` (TLS/LAN), `1883` (loopback) | Cameras connect via TLS on 8883 |
 
 ## Repository Layout
@@ -253,8 +253,8 @@ A single Jetson Orin Nano can process 4–6 simultaneous camera streams in real-
 
 ```bash
 cp .env.example .env
-# Edit .env — set GCP project ID, MQTT credentials, Jetson URL, webhook secrets
-# Ensure GOOGLE_APPLICATION_CREDENTIALS points to your Firestore service account JSON
+# Edit .env — set MQTT credentials, Jetson URL, API key
+# DATABASE_URL is configured for docker-compose by default
 ```
 
 ### 2. Start the Command Tier (R5)
@@ -263,8 +263,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Starts `peekaboo-mqtt` (Mosquitto, ports 1883/8883) and `peekaboo-command` (Command Module, port 8081).
-The Command Module connects to Google Cloud Firestore for all data storage (see `.env` for credentials).
+Starts `peekaboo-postgres` (PostgreSQL), `peekaboo-mqtt` (Mosquitto, ports 1883/8883), and `peekaboo-command` (Command Module, port 8081).
+All data is stored locally in PostgreSQL — no cloud dependencies.
 
 ### 3. Start the Inference Service (Jetson)
 
@@ -340,10 +340,9 @@ After flashing, press RST once to boot the application.
 ```bash
 cd command-module
 pip install -r requirements.txt
-# Set up Firestore credentials (service account JSON)
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/gcp-sa.json
-export GCP_PROJECT_ID=your-gcp-project
-# Run the app
+# Requires PostgreSQL running locally or via docker-compose
+# DATABASE_URL should point to your Postgres instance
+export DATABASE_URL="postgresql+asyncpg://peekaboo:peekaboo@localhost/peekaboo"
 uvicorn src.main:app --reload --port 8081
 ```
 
@@ -376,11 +375,12 @@ Mock patterns:
 
 ### Architecture Choices
 
-**Why Firestore instead of PostgreSQL?**
-- Firestore's audit logging capabilities are built-in and immutable (append-only)
-- Schema-less design accommodates rapid prototyping (person embeddings can grow without migrations)
-- Serverless billing matches low-traffic home deployment
-- Trade-off: no complex joins or transactions; application enforces referential integrity
+**Why PostgreSQL for this local-only deployment?**
+- Self-contained: no cloud dependencies, works completely offline
+- Simple to deploy: `docker-compose up` includes database and all services
+- Audit trail: immutable audit_logs table for compliance tracking
+- Familiar: standard SQL for inspection and debugging
+- Trade-off: requires running a database container; more operations overhead than serverless
 
 **Why MQTT instead of REST for device control?**
 - Cameras may be offline or changing IPs; MQTT persists messages via broker until delivery

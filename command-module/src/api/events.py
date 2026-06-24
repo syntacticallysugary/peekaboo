@@ -10,7 +10,7 @@ from google.cloud.firestore_v1 import FieldFilter
 from pydantic import BaseModel
 
 from config import settings
-from db.firestore import EVENTS, PERSONS, get_db
+from db.postgres import EVENTS, PERSONS, get_db
 from services.inference_client import inference_client
 from services.inference_sync import sync_identities_to_edge
 

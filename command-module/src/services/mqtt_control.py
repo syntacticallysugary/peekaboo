@@ -15,7 +15,7 @@ import time
 import aiomqtt
 
 from config import settings
-from db.firestore import CAMERAS, get_db
+from db.postgres import CAMERAS, get_db
 from websocket.manager import ws_manager
 
 logger = logging.getLogger(__name__)

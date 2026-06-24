@@ -5,7 +5,7 @@ import logging
 from google.cloud.firestore_v1 import FieldFilter
 
 from config import settings
-from db.firestore import PERSONS, get_db
+from db.postgres import PERSONS, get_db
 from services.inference_client import inference_client
 
 logger = logging.getLogger(__name__)

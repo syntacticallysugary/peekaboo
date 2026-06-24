@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: peekaboo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: peekaboo
+      POSTGRES_PASSWORD: peekaboo
+      POSTGRES_DB: peekaboo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U peekaboo -d peekaboo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   mqtt:
     image: eclipse-mosquitto:2
     container_name: peekaboo-mqtt
@@ -11,6 +29,8 @@ services:
       - ./mosquitto/certs:/mosquitto/certs:ro
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+    depends_on:
+      - postgres
 
   command-module:
     build: ./command-module
@@ -18,8 +38,7 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
-      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
-      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-sa.json
+      DATABASE_URL: postgresql+asyncpg://peekaboo:peekaboo@localhost/peekaboo
       MQTT_BROKER_HOST: 127.0.0.1
       MQTT_BROKER_PORT: "1883"
       MQTT_USERNAME: command-module
@@ -32,11 +51,15 @@ services:
       # TLS_CERTFILE: /certs/server.crt
       # TLS_KEYFILE: /certs/server.key
     depends_on:
+      postgres:
+        condition: service_healthy
       mqtt:
         condition: service_started
     volumes:
       - ./data/recordings:/data/recordings
       - ./data/firmware:/data/firmware
-      - ${GCP_SA_KEY_PATH:-/dev/null}:/secrets/gcp-sa.json:ro
       # Uncomment to enable HTTPS/TLS:
       # - ./mosquitto/certs:/certs:ro
+
+volumes:
+  postgres_data:

@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from db.firestore import SYSTEM, get_db
+from db.postgres import SYSTEM, get_db
 from services import system_state
 from services.inference_client import inference_client
 from websocket.manager import ws_manager

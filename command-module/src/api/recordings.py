@@ -4,7 +4,7 @@ from rate_limit import limiter
 from fastapi import APIRouter, HTTPException, Query
 from google.cloud.firestore_v1 import FieldFilter
 
-from db.firestore import EVENTS, get_db
+from db.postgres import EVENTS, get_db
 from storage.factory import get_storage_backend
 
 router = APIRouter(prefix="/api/recordings", tags=["recordings"])

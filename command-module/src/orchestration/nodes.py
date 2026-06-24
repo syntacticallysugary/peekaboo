@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import httpx
 
 from config import settings
-from db.firestore import EVENTS, get_db
+from db.postgres import EVENTS, get_db
 from orchestration.state import SystemState
 from services.event_queue import DetectionEvent as BusEvent, event_bus
 from services.inference_client import inference_client

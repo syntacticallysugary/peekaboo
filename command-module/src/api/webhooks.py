@@ -9,7 +9,7 @@ from validation import validate_webhook_url
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl, field_validator
 
-from db.firestore import WEBHOOKS, get_db
+from db.postgres import WEBHOOKS, get_db
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
