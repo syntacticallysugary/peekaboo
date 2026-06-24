@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from auth import verify_api_key
+from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from validation import validate_channel, MAX_FIRMWARE_SIZE
@@ -20,6 +21,7 @@ def _ensure_dir() -> None:
 
 
 @router.get("")
+@limiter.limit("100/minute")
 async def list_firmware(_: str = Depends(verify_api_key)):
     """Current stored firmware per known channel, for the Settings UI."""
     _ensure_dir()
@@ -42,6 +44,7 @@ async def list_firmware(_: str = Depends(verify_api_key)):
 
 
 @router.post("/{channel}")
+@limiter.limit("5/minute")
 async def upload_firmware(channel: str, request: Request, _: str = Depends(verify_api_key)):
     """
     Store a firmware binary for a camera channel (e.g. 's3eye', 'xiao').
@@ -72,6 +75,7 @@ async def upload_firmware(channel: str, request: Request, _: str = Depends(verif
 
 
 @router.get("/{channel}/check")
+@limiter.limit("100/minute")
 async def check_firmware(channel: str, version: str = Query(...), _: str = Depends(verify_api_key)):
     """
     Called by cameras on boot and periodically to check for updates.
@@ -89,6 +93,7 @@ async def check_firmware(channel: str, version: str = Query(...), _: str = Depen
 
 
 @router.get("/{channel}/binary")
+@limiter.limit("100/minute")
 async def get_firmware_binary(channel: str, _: str = Depends(verify_api_key)):
     """Serve the stored firmware binary for OTA download."""
     channel = validate_channel(channel)

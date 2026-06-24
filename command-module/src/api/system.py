@@ -2,6 +2,7 @@
 import re
 
 from auth import verify_api_key
+from rate_limit import limiter
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -21,11 +22,13 @@ class ScheduleRequest(BaseModel):
 
 
 @router.get("/status")
+@limiter.limit("100/minute")
 async def get_status(_: str = Depends(verify_api_key)):
     return {"armed": system_state.is_armed()}
 
 
 @router.post("/arm")
+@limiter.limit("100/minute")
 async def arm(_: str = Depends(verify_api_key)):
     await system_state.set_armed(True)
     await inference_client.set_armed(True)
@@ -34,6 +37,7 @@ async def arm(_: str = Depends(verify_api_key)):
 
 
 @router.post("/disarm")
+@limiter.limit("100/minute")
 async def disarm(_: str = Depends(verify_api_key)):
     await system_state.set_armed(False)
     await inference_client.set_armed(False)
@@ -42,11 +46,13 @@ async def disarm(_: str = Depends(verify_api_key)):
 
 
 @router.get("/schedule")
+@limiter.limit("100/minute")
 async def get_schedule(_: str = Depends(verify_api_key)):
     return scheduler.get_config()
 
 
 @router.post("/schedule")
+@limiter.limit("100/minute")
 async def set_schedule(req: ScheduleRequest, _: str = Depends(verify_api_key)):
     if req.enabled:
         for t in (req.arm_time, req.disarm_time):

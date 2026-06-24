@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from auth import verify_api_key
+from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 
@@ -17,6 +18,7 @@ class WebhookCreate(BaseModel):
 
 
 @router.get("")
+@limiter.limit("100/minute")
 async def list_webhooks(_: str = Depends(verify_api_key)):
     db = get_db()
     webhooks = []
@@ -27,6 +29,7 @@ async def list_webhooks(_: str = Depends(verify_api_key)):
 
 
 @router.post("", status_code=201)
+@limiter.limit("30/minute")
 async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
     db = get_db()
     webhook_id = str(uuid.uuid4())
@@ -40,6 +43,7 @@ async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
 
 
 @router.delete("/{webhook_id}", status_code=204)
+@limiter.limit("100/minute")
 async def delete_webhook(webhook_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(WEBHOOKS).document(webhook_id)

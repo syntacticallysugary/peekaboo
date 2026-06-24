@@ -10,10 +10,14 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from fastapi.security import HTTPBearer
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from api import alerts, cameras, events, firmware, persons, recordings, system, webhooks
 from auth import verify_api_key
 from config import settings
+from rate_limit import limiter
 from db.firestore import init_firestore
 from orchestration.workflow import guard_workflow  # noqa: F401 — triggers graph compilation
 from services import camera_registry, scheduler, system_state, webhook_dispatcher
@@ -65,6 +69,11 @@ async def _inference_health_loop():
 
 
 app = FastAPI(title="Peekaboo Command Module", version="2.0.0", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, lambda request, exc: Response(
+    content="Rate limit exceeded", status_code=429, media_type="text/plain"
+))
 
 app.add_middleware(
     CORSMiddleware,

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 import httpx
 from auth import verify_api_key
+from rate_limit import limiter
 from fastapi import APIRouter, HTTPException, Query
 from google.cloud.firestore_v1 import FieldFilter
 from pydantic import BaseModel
@@ -33,6 +34,7 @@ def _serialise(doc_id: str, d: dict) -> dict:
 
 
 @router.get("")
+@limiter.limit("100/minute")
 async def list_events(
     camera_id: str | None = Query(None),
     classification: str | None = Query(None),
@@ -60,6 +62,7 @@ async def list_events(
 
 
 @router.post("/{event_id}/identify")
+@limiter.limit("100/minute")
 async def identify_event(event_id: str, req: IdentifyRequest, _: str = Depends(verify_api_key)):
     """Identify an unknown event as a known person and enroll the face embedding."""
     db = get_db()

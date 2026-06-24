@@ -1,5 +1,6 @@
 """Recording retrieval endpoints."""
 from auth import verify_api_key
+from rate_limit import limiter
 from fastapi import APIRouter, HTTPException, Query
 from google.cloud.firestore_v1 import FieldFilter
 
@@ -23,6 +24,7 @@ def _serialise(doc_id: str, d: dict) -> dict:
 
 
 @router.get("")
+@limiter.limit("100/minute")
 async def list_recordings(
     camera_id: str | None = Query(None),
     classification: str | None = Query(None),
@@ -49,6 +51,7 @@ async def list_recordings(
 
 
 @router.get("/{event_id}/url")
+@limiter.limit("100/minute")
 async def get_clip_url(event_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc = await db.collection(EVENTS).document(event_id).get()

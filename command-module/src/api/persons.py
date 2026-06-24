@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 import httpx
 from auth import verify_api_key
+from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -47,6 +48,7 @@ class PersonUpdate(BaseModel):
 
 
 @router.get("")
+@limiter.limit("100/minute")
 async def list_persons(_: str = Depends(verify_api_key)):
     db = get_db()
     persons = []
@@ -63,6 +65,7 @@ async def list_persons(_: str = Depends(verify_api_key)):
 
 
 @router.post("", status_code=201)
+@limiter.limit("20/minute")
 async def create_person(data: PersonCreate, _: str = Depends(verify_api_key)):
     db = get_db()
     person_id = str(uuid.uuid4())
@@ -77,6 +80,7 @@ async def create_person(data: PersonCreate, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{person_id}/images", status_code=201)
+@limiter.limit("20/minute")
 async def add_face_image(person_id: str, image: UploadFile = File(...), _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
@@ -116,6 +120,7 @@ async def add_face_image(person_id: str, image: UploadFile = File(...), _: str =
 
 
 @router.put("/{person_id}")
+@limiter.limit("100/minute")
 async def update_person(person_id: str, data: PersonUpdate, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
@@ -137,6 +142,7 @@ async def update_person(person_id: str, data: PersonUpdate, _: str = Depends(ver
 
 
 @router.post("/{person_id}/capture", status_code=202)
+@limiter.limit("100/minute")
 async def capture_face(person_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)
@@ -189,6 +195,7 @@ async def capture_face(person_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{person_id}/auto-enroll")
+@limiter.limit("100/minute")
 async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload, _: str = Depends(verify_api_key)):
     """Add an embedding only if it represents a meaningfully new camera perspective.
 
@@ -228,6 +235,7 @@ async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload, _: str = 
 
 
 @router.delete("/{person_id}", status_code=204)
+@limiter.limit("100/minute")
 async def delete_person(person_id: str, _: str = Depends(verify_api_key)):
     db = get_db()
     doc_ref = db.collection(PERSONS).document(person_id)

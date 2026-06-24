@@ -8,6 +8,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from auth import verify_api_key
+from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from config import settings
 from db.firestore import CAMERAS, EVENTS, PERSONS, get_db
 from validation import validate_camera_id
@@ -88,12 +89,16 @@ class EdgeReportRequest(BaseModel):
 
 
 @router.post("/register", status_code=201)
+@limiter.limit("100/minute")
+@limiter.limit("10/minute")
 async def register(req: RegisterRequest, _: str = Depends(verify_api_key)):
     cam = await camera_registry.register_camera(req.camera_id, req.type, req.ip, req.stream_url)
     return {"camera_id": cam.camera_id, "status": cam.status}
 
 
 @router.post("/{camera_id}/trigger", status_code=202)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
     camera_id = validate_camera_id(camera_id)
     db = get_db()
@@ -122,6 +127,8 @@ async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, _: s
 
 
 @router.get("")
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def list_cameras(_: str = Depends(verify_api_key)):
     db = get_db()
     cameras = []
@@ -139,6 +146,8 @@ async def list_cameras(_: str = Depends(verify_api_key)):
 
 
 @router.delete("/{camera_id}", status_code=204)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
     camera_id = validate_camera_id(camera_id)
     db = get_db()
@@ -150,6 +159,8 @@ async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.get("/{camera_id}/config", response_model=CameraConfig)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def get_camera_config(camera_id: str, _: str = Depends(verify_api_key)):
     camera_id = validate_camera_id(camera_id)
     db = get_db()
@@ -161,6 +172,8 @@ async def get_camera_config(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{camera_id}/face", response_model=FaceEventResponse)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
     """DEPRECATED — kept for backward compatibility."""
     await camera_registry.heartbeat(camera_id)
@@ -185,6 +198,8 @@ async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks,
 
 
 @router.post("/{camera_id}/heartbeat", status_code=200)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def camera_heartbeat(camera_id: str, _: str = Depends(verify_api_key)):
     """Called by the inference service when a camera is actively sending frames."""
     camera_id = validate_camera_id(camera_id)
@@ -196,6 +211,8 @@ async def camera_heartbeat(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/report", status_code=202)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def report_edge_event(req: EdgeReportRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
     """
     Edge-First Alert Receiver.
@@ -269,6 +286,8 @@ async def _require_camera(camera_id: str) -> None:
 
 
 @router.post("/{camera_id}/reboot", status_code=202)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def reboot_camera(camera_id: str, _: str = Depends(verify_api_key)):
     """Send a secure reboot command to the camera over MQTT."""
     from services.mqtt_control import mqtt_control
@@ -281,6 +300,8 @@ async def reboot_camera(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{camera_id}/ota-check", status_code=202)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def ota_check_camera(camera_id: str, _: str = Depends(verify_api_key)):
     """Ask the camera to poll for new firmware immediately."""
     camera_id = validate_camera_id(camera_id)
@@ -294,6 +315,8 @@ async def ota_check_camera(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{camera_id}/diag")
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def diag_camera(camera_id: str, _: str = Depends(verify_api_key)):
     """Request live diagnostics and wait briefly for the camera's response."""
     from services.mqtt_control import mqtt_control
@@ -308,6 +331,8 @@ async def diag_camera(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.get("/{camera_id}/status")
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def camera_mqtt_status(camera_id: str, _: str = Depends(verify_api_key)):
     """Return the last status message received from the camera over MQTT."""
     camera_id = validate_camera_id(camera_id)
@@ -316,6 +341,8 @@ async def camera_mqtt_status(camera_id: str, _: str = Depends(verify_api_key)):
 
 
 @router.post("/{camera_id}/motion", status_code=202)
+@limiter.limit("100/minute")
+@limiter.limit("100/minute")
 async def motion_event(camera_id: str, req: MotionEventRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
     camera_id = validate_camera_id(camera_id)
     db = get_db()
