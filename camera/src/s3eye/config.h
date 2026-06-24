@@ -49,8 +49,10 @@
 #define MQTT_CMD_WINDOW_S 60
 #endif
 // Number of recent command nonces remembered to reject replays.
+// Increased from 8 to 64 to improve replay protection: with ~8 commands/min,
+// 64-entry cache provides ~8 minutes of unique nonce history before wraparound.
 #ifndef MQTT_NONCE_CACHE
-#define MQTT_NONCE_CACHE 8
+#define MQTT_NONCE_CACHE 64
 #endif
 // Ignore reboot commands within this many seconds of boot (anti reboot-loop).
 #ifndef MQTT_REBOOT_MIN_INTERVAL_S
