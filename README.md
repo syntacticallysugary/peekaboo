@@ -40,7 +40,7 @@ Three tiers communicate over a local WiFi network:
 │                      │    │ • YOLOv8n person detector  │    │ • FastAPI REST API      │
 │ • JPEG frame stream  │───►│ • InsightFace recognition  │───►│ • Person registry       │
 │ • Motion heartbeat   │    │   (buffalo_l model)        │    │ • Alert dispatch        │
-│ • MQTT control       │    │ • Session management       │    │ • PostgreSQL + pgvector │
+│ • MQTT control       │    │ • Session management       │    │ • Firestore database    │
 │ • OTA updates        │    │ • Arm/disarm enforcement   │    │ • MQTT broker           │
 │                      │    │                            │    │ • WebSocket dashboard   │
 └──────────────────────┘    └───────────────────────────┘    └─────────────────────────┘
@@ -112,7 +112,7 @@ This project showcases real-world IoT architecture patterns:
 | Command Module | R5 (`192.168.1.105`) | `8081` | FastAPI; `network_mode: host` |
 | Inference Service | Jetson (`192.168.1.108`) | `8001` | FastAPI + InsightFace; NVIDIA runtime |
 | Person Detector | Jetson (`192.168.1.108`) | `8002` | YOLOv8n ONNX; CPU-only sidecar |
-| PostgreSQL (pgvector) | R5 | `5435` | Person embeddings + event log |
+| Firestore (Google Cloud) | Cloud | — | Person embeddings, audit logs, events, webhooks |
 | Mosquitto MQTT | R5 | `8883` (TLS/LAN), `1883` (loopback) | Cameras connect via TLS on 8883 |
 
 ## Repository Layout
@@ -138,8 +138,7 @@ PI/
 │       └── data_collect/ # Training data collection mode
 ├── mosquitto/           # Mosquitto config (TLS + auth)
 ├── docs/                # Architecture notes and planning docs
-├── docker-compose.yml   # Command tier: db, mqtt, command-module on R5
-├── init-db.sql          # pgvector schema bootstrap
+├── docker-compose.yml   # Orchestration: mqtt, command-module on R5
 └── .env                 # Secrets (not committed)
 ```
 
@@ -254,7 +253,8 @@ A single Jetson Orin Nano can process 4–6 simultaneous camera streams in real-
 
 ```bash
 cp .env.example .env
-# Edit .env — set DB credentials, MQTT credentials, Jetson URL, webhook secrets
+# Edit .env — set GCP project ID, MQTT credentials, Jetson URL, webhook secrets
+# Ensure GOOGLE_APPLICATION_CREDENTIALS points to your Firestore service account JSON
 ```
 
 ### 2. Start the Command Tier (R5)
@@ -263,7 +263,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Starts `peekaboo-db` (PostgreSQL + pgvector, port 5435), `peekaboo-mqtt` (Mosquitto, ports 1883/8883), and `peekaboo-command` (Command Module, port 8081).
+Starts `peekaboo-mqtt` (Mosquitto, ports 1883/8883) and `peekaboo-command` (Command Module, port 8081).
+The Command Module connects to Google Cloud Firestore for all data storage (see `.env` for credentials).
 
 ### 3. Start the Inference Service (Jetson)
 
@@ -339,8 +340,11 @@ After flashing, press RST once to boot the application.
 ```bash
 cd command-module
 pip install -r requirements.txt
-DATABASE_URL=postgresql+asyncpg://peekaboo:peekaboo@localhost:5435/peekaboo \
-  uvicorn src.main:app --reload --port 8081
+# Set up Firestore credentials (service account JSON)
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/gcp-sa.json
+export GCP_PROJECT_ID=your-gcp-project
+# Run the app
+uvicorn src.main:app --reload --port 8081
 ```
 
 ## Testing
