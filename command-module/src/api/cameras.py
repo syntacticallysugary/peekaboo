@@ -8,6 +8,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from auth import verify_api_key
+from audit import log_camera_deleted, log_camera_registered
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from config import settings
 from db.firestore import CAMERAS, EVENTS, PERSONS, get_db
@@ -89,10 +90,10 @@ class EdgeReportRequest(BaseModel):
 
 
 @router.post("/register", status_code=201)
-@limiter.limit("100/minute")
 @limiter.limit("10/minute")
 async def register(req: RegisterRequest, _: str = Depends(verify_api_key)):
     cam = await camera_registry.register_camera(req.camera_id, req.type, req.ip, req.stream_url)
+    await log_camera_registered(actor="api", camera_id=cam.camera_id, camera_type=req.type, ip=req.ip)
     return {"camera_id": cam.camera_id, "status": cam.status}
 
 
@@ -147,7 +148,6 @@ async def list_cameras(_: str = Depends(verify_api_key)):
 
 @router.delete("/{camera_id}", status_code=204)
 @limiter.limit("100/minute")
-@limiter.limit("100/minute")
 async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
     camera_id = validate_camera_id(camera_id)
     db = get_db()
@@ -156,6 +156,7 @@ async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
     if not doc.exists:
         raise HTTPException(404, f"Camera '{camera_id}' not found")
     await doc_ref.delete()
+    await log_camera_deleted(actor="api", camera_id=camera_id)
 
 
 @router.get("/{camera_id}/config", response_model=CameraConfig)
