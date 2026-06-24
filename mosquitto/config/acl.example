@@ -1,0 +1,80 @@
+# Mosquitto Access Control List (ACL)
+#
+# This file defines per-user and per-device access policies.
+# Each user/device can only publish/subscribe to their designated topics.
+#
+# Default deny principle: explicit allow only (default is denied).
+
+# Pattern:
+# user <username>
+# topic read <topic>    # Can subscribe/receive
+# topic write <topic>   # Can publish/send
+
+# ────────────────────────────────────────────────────────────────────────────
+# Command Module (central orchestrator)
+# ────────────────────────────────────────────────────────────────────────────
+user command-module
+# Read status reports from all cameras
+topic read peekaboo/status/#
+# Publish commands to all cameras
+topic write peekaboo/cmd/#
+
+# ────────────────────────────────────────────────────────────────────────────
+# Camera Devices (per-device credentials)
+# ────────────────────────────────────────────────────────────────────────────
+# Each camera device gets a unique username (same as camera_id) and password.
+# Cameras can only:
+#   - PUBLISH: diagnostic/status reports on peekaboo/status/{camera_id}
+#   - SUBSCRIBE: command topic peekaboo/cmd/{camera_id}
+
+# ESP32-S3-EYE #1
+user s3eye-01
+# This camera publishes its status
+topic write peekaboo/status/s3eye-01
+# This camera subscribes to its command topic
+topic read peekaboo/cmd/s3eye-01
+
+# ESP32-S3-EYE #2
+user s3eye-02
+topic write peekaboo/status/s3eye-02
+topic read peekaboo/cmd/s3eye-02
+
+# XIAO ESP32-S3 Sense #1
+user xiao-01
+topic write peekaboo/status/xiao-01
+topic read peekaboo/cmd/xiao-01
+
+# XIAO ESP32-S3 Sense #2
+user xiao-02
+topic write peekaboo/status/xiao-02
+topic read peekaboo/cmd/xiao-02
+
+# ────────────────────────────────────────────────────────────────────────────
+# Setup Instructions
+# ────────────────────────────────────────────────────────────────────────────
+#
+# 1. Copy this file to /mosquitto/config/acl (or your deployment location):
+#    cp acl.example acl
+#
+# 2. Generate passwords for each user:
+#    mosquitto_passwd -b /mosquitto/config/passwd command-module <COMMAND_MODULE_PASSWORD>
+#    mosquitto_passwd -b /mosquitto/config/passwd s3eye-01 <S3EYE_01_PASSWORD>
+#    mosquitto_passwd -b /mosquitto/config/passwd s3eye-02 <S3EYE_02_PASSWORD>
+#    mosquitto_passwd -b /mosquitto/config/passwd xiao-01 <XIAO_01_PASSWORD>
+#    mosquitto_passwd -b /mosquitto/config/passwd xiao-02 <XIAO_02_PASSWORD>
+#
+# 3. Restart Mosquitto:
+#    docker-compose down mqtt
+#    docker-compose up -d mqtt
+#
+# 4. Update credentials:
+#    - Root .env: MQTT_COMMAND_PASSWORD
+#    - camera/.env: MQTT_PASSWORD_<CAMERA_ID> for each camera
+#    - Rebuild and flash firmware with new passwords
+#
+# 5. Test:
+#    mosquitto_sub -h <BROKER_IP> -p 8883 -u command-module -P <PASSWORD> \
+#      --cafile mosquitto/certs/ca.crt -t "peekaboo/status/#"
+#
+#    # Should see status messages from cameras publishing to peekaboo/status/<id>
+#    # Should NOT see cameras able to publish to peekaboo/cmd/* (not allowed)
