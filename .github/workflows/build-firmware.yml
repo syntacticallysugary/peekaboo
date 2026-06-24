@@ -1,0 +1,108 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'camera/src/**'
+      - 'camera/platformio.ini'
+      - 'camera/CMakeLists.txt'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'camera/src/**'
+      - 'camera/platformio.ini'
+      - 'camera/CMakeLists.txt'
+
+jobs:
+  build-firmware:
+    name: PlatformIO Build (No Hardware)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - esp32s3eye
+          - esp32s3eye_02
+          - xiao_s3_01
+          - xiao_s3_02
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade pip platformio
+
+      - name: Create dummy .env file
+        working-directory: camera
+        run: |
+          cat > .env << 'EOF'
+          WIFI_SSID=test-ssid
+          WIFI_PASSWORD=test-password
+          MQTT_BROKER_HOST=192.168.1.105
+          MQTT_PASSWORD=test-password
+          JETSON_URL=http://192.168.1.108:8001
+          COMMAND_MODULE_URL=http://192.168.1.105:8081
+          SECRET_PSK=test-psk
+          EOF
+
+      - name: Build firmware for ${{ matrix.env }}
+        working-directory: camera
+        run: pio run -e ${{ matrix.env }}
+
+      - name: Verify build output
+        working-directory: camera
+        run: |
+          ls -lh .pio/build/${{ matrix.env }}/firmware.bin
+          file .pio/build/${{ matrix.env }}/firmware.bin
+
+  firmware-size-check:
+    name: Firmware Size Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - esp32s3eye
+          - xiao_s3_01
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade pip platformio
+
+      - name: Create dummy .env file
+        working-directory: camera
+        run: |
+          cat > .env << 'EOF'
+          WIFI_SSID=test-ssid
+          WIFI_PASSWORD=test-password
+          MQTT_BROKER_HOST=192.168.1.105
+          MQTT_PASSWORD=test-password
+          JETSON_URL=http://192.168.1.108:8001
+          COMMAND_MODULE_URL=http://192.168.1.105:8081
+          SECRET_PSK=test-psk
+          EOF
+
+      - name: Build and check size for ${{ matrix.env }}
+        working-directory: camera
+        run: |
+          pio run -e ${{ matrix.env }}
+          SIZE=$(($(stat -f%z .pio/build/${{ matrix.env }}/firmware.bin 2>/dev/null || stat -c%s .pio/build/${{ matrix.env }}/firmware.bin)))
+          LIMIT=$((8 * 1024 * 1024))  # 8 MB flash
+          PERCENT=$((SIZE * 100 / LIMIT))
+          echo "Firmware size: $((SIZE / 1024)) KB / $((LIMIT / 1024)) KB ($PERCENT%)"
+          if [ $SIZE -gt $LIMIT ]; then
+            echo "❌ Firmware exceeds flash size!"
+            exit 1
+          fi

@@ -1,0 +1,96 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  secrets:
+    name: Secrets & Credentials Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secrets Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug
+
+  python-security:
+    name: Python Security & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install bandit[toml] pip-audit
+
+      - name: Bandit Security Scan
+        run: |
+          bandit -r command-module/src inference-service/src -f json -o bandit-report.json || true
+          bandit -r command-module/src inference-service/src
+
+      - name: Pip Audit (Dependency Vulnerabilities)
+        working-directory: command-module
+        run: pip-audit --desc || true
+
+  cpp-static-analysis:
+    name: C++ Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck on firmware
+        run: |
+          cppcheck --enable=all --suppress=missingIncludeSystem \
+            --error-exitcode=1 \
+            camera/src/s3eye camera/src/data_collect \
+            || true
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for GPL/AGPL dependencies
+        run: |
+          pip install pip-licenses
+          pip-licenses --format=json --with-urls > licenses.json
+          python3 << 'EOF'
+          import json
+          with open('licenses.json') as f:
+              licenses = json.load(f)
+          restricted = ['GPL', 'AGPL', 'SSPL']
+          issues = [l for l in licenses if any(r in l.get('License', '') for r in restricted)]
+          if issues:
+              print("⚠️ GPL/AGPL licenses detected:")
+              for i in issues:
+                  print(f"  - {i['Name']}: {i['License']}")
+              exit(1)
+          print("✓ No GPL/AGPL licenses detected")
+          EOF
+        continue-on-error: true

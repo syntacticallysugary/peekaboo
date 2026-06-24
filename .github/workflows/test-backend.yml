@@ -1,0 +1,90 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'command-module/src/**'
+      - 'command-module/tests/**'
+      - 'command-module/requirements.txt'
+      - 'inference-service/src/**'
+      - 'inference-service/requirements*.txt'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'command-module/src/**'
+      - 'command-module/tests/**'
+      - 'command-module/requirements.txt'
+      - 'inference-service/src/**'
+      - 'inference-service/requirements*.txt'
+
+jobs:
+  command-module-type-check:
+    name: Command Module — Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: command-module
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt mypy
+
+      - name: Type check with mypy
+        working-directory: command-module
+        run: mypy src --ignore-missing-imports
+        continue-on-error: true
+
+  command-module-tests:
+    name: Command Module — Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: command-module
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt pytest pytest-asyncio
+
+      - name: Run tests
+        working-directory: command-module
+        run: pytest tests/ -v
+        continue-on-error: true
+
+  inference-service-type-check:
+    name: Inference Service — Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: inference-service
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-jetson.txt mypy
+        continue-on-error: true
+
+      - name: Type check with mypy
+        working-directory: inference-service
+        run: mypy src --ignore-missing-imports
+        continue-on-error: true

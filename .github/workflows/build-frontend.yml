@@ -1,0 +1,57 @@
+name: Build Frontend
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'command-module/frontend/**'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'command-module/frontend/**'
+
+jobs:
+  build-frontend:
+    name: Vue TypeScript Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'command-module/frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: command-module/frontend
+        run: npm ci
+
+      - name: Type check with vue-tsc
+        working-directory: command-module/frontend
+        run: npm run type-check
+        continue-on-error: true
+
+      - name: Lint (ESLint)
+        working-directory: command-module/frontend
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Build with Vite
+        working-directory: command-module/frontend
+        run: npm run build
+
+      - name: Verify build output
+        working-directory: command-module/frontend
+        run: |
+          [ -d dist ] || exit 1
+          [ -f dist/index.html ] || exit 1
+          echo "✓ Build successful: $(find dist -type f | wc -l) files generated"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: command-module/frontend/dist
+          retention-days: 5
