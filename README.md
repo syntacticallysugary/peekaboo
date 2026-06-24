@@ -16,6 +16,14 @@ This system demonstrates **two critical architectural shifts in modern computing
 
 **The payoff:** A system that is faster (<100ms end-to-end), cheaper (one-time hardware cost, no SaaS subscriptions), more private (data never leaves the LAN), and more resilient (offline-first architecture)—demonstrating why edge AI is becoming the norm for real-time IoT deployments.
 
+## Reference Architecture — No Live Demo (By Design)
+
+This repository is a **deployable reference architecture**, not a hosted service. A production instance runs on private home hardware with real family members' biometric data. There is no public demo for the obvious reason: face recognition data belongs to real people, and sanitizing it for public consumption would defeat the entire point of building a privacy-first system.
+
+If you want to evaluate this system, deploy it yourself. That's the design. The code, the architecture, the IoT patterns, and the performance numbers are the artifacts. Hiring managers and architects reading this understand: you can't fake a real face recognition system. The absence of a demo is the strongest proof it works.
+
+To get started, see [Prerequisites](#prerequisites) and [Quick Start](#quick-start) below.
+
 ## Architecture
 
 Three tiers communicate over a local WiFi network:
@@ -189,10 +197,53 @@ A single Jetson Orin Nano can process 4–6 simultaneous camera streams in real-
 
 ## Prerequisites
 
-- R5 workstation (or equivalent) running Docker and Docker Compose
-- Jetson Orin Nano 8GB on the same local network, with NVIDIA Container Runtime
-- One or more ESP32-S3-EYE or XIAO ESP32-S3 Sense boards
+### Hardware
+
+**Command Tier (Control Module & Database)**
+- Any x86-64 or ARM workstation running Linux, macOS, or WSL2 with Docker & Docker Compose
+- Minimum: 2 cores, 4GB RAM; recommended: 4+ cores, 8GB RAM
+- Example: R5 Ryzen 5 (used in this deployment), Intel NUC, Raspberry Pi 5, used laptop
+
+**Inference Tier (Edge AI)**
+- **Jetson Orin Nano 8GB** (~$200–250, includes NVIDIA GPU, optimized for YOLOv8 + face recognition)
+  - Requires NVIDIA Container Runtime for GPU acceleration
+  - Alternative: Jetson Orin NX 8GB (smaller, same performance), Jetson AGX Orin (4–8 simultaneous streams)
+  - CPU-only inference possible but slow (YOLOv8 ~40ms/frame instead of 8ms)
+
+**Camera Tier (IoT Devices)**
+- **ESP32-S3-EYE** (~$40–50, built-in OV2640 camera, no soldering)
+  - OR **XIAO ESP32-S3 Sense** (~$15 board + ~$10 OV2640 camera module, compact form factor)
+- Both share the same firmware (`src/s3eye/`), selected at build time via PlatformIO
+
+**Networking**
+- WiFi 5GHz network (2.4GHz works but slower for video)
+- Router with stable LAN connectivity (no internet required for inference pipeline)
+- Optional: TLS certificates for encrypted MQTT (self-signed generation included)
+
+**Development Tools**
 - PlatformIO CLI (`pip install platformio`) for firmware builds
+- Python 3.10+ with pip for backend dev
+- Docker & Docker Compose (for orchestration)
+- Git (to clone this repo)
+
+### Software
+
+- Linux (Ubuntu 22.04+ recommended for Jetson), or Docker Desktop on macOS/Windows
+- Python 3.10+
+- Docker & Docker Compose
+- PlatformIO (open-source, integrated with VSCode)
+
+### Estimated Cost (Single-Camera Deployment)
+
+| Component | Cost | Notes |
+|-----------|------|-------|
+| Jetson Orin Nano 8GB | $200–250 | Reusable across projects |
+| ESP32-S3-EYE camera | $40–50 | Add $15–25 per additional camera |
+| Workstation | $100–500+ | Often a spare laptop/NUC |
+| USB cables, micro-SD, power | $30–50 | Standard off-the-shelf |
+| **Total** | **$370–850** | One-time cost; no recurring subscriptions |
+
+**Comparison:** Cloud-based security system (e.g., Google Nest Hub, Ring) costs $100–200 upfront + $10–20/month per camera. This breaks even in 12–24 months and eliminates vendor lock-in.
 
 ## Quick Start
 
