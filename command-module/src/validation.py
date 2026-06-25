@@ -170,7 +170,7 @@ def validate_webhook_url(url_str: str) -> str:
         raise HTTPException(400, "Webhook URLs must use HTTPS (not HTTP)")
 
     # Block localhost variants
-    localhost_variants = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "[::]", "127.0.0.2")
+    localhost_variants = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "[::]", "127.0.0.2")  # nosec B104
     if hostname.lower() in localhost_variants or hostname.startswith("127."):
         raise HTTPException(400, "Localhost URLs not allowed for webhooks")
 

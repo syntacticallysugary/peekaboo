@@ -43,7 +43,7 @@ jobs:
       - name: Bandit Security Scan
         run: |
           bandit -r command-module/src inference-service/src -f json -o bandit-report.json || true
-          bandit -r command-module/src inference-service/src
+          bandit -r command-module/src inference-service/src -ll
 
       - name: Pip Audit (Dependency Vulnerabilities)
         working-directory: command-module

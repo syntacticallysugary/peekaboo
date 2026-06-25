@@ -32,7 +32,7 @@ async def record_clip(
     filename = f"{ts_str}_{classification}.mp4"
     relative_path = f"{date_str}/{camera_id}/{filename}"
 
-    tmp = Path(f"/tmp/pfig_{uuid.uuid4().hex}.mp4")
+    tmp = Path(f"/tmp/pfig_{uuid.uuid4().hex}.mp4")  # nosec B108 — UUID suffix prevents collisions
     cmd = [
         "ffmpeg", "-y",
         "-t", str(duration_s),

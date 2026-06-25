@@ -1,6 +1,6 @@
 import base64
 import logging
-import pickle
+import pickle  # nosec B403 — cache file is written and read by this process only
 import threading
 import time
 from pathlib import Path
@@ -38,7 +38,7 @@ class FaceEngine:
         if self._cache_path.exists():
             try:
                 with open(self._cache_path, "rb") as f:
-                    return pickle.load(f)
+                    return pickle.load(f)  # nosec B301
             except Exception as exc:
                 logger.error("Failed to load identity cache: %s", exc)
         return []

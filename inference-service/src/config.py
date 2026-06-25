@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # API Settings
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 — intentional: LAN-only service
     port: int = 8001
     log_level: str = "info"
 
