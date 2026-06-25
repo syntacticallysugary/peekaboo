@@ -19,6 +19,7 @@ This system demonstrates **two critical architectural shifts in modern computing
 
 **The payoff:** A system that is faster (<100ms end-to-end), cheaper (one-time hardware cost, no SaaS subscriptions), more private (data never leaves the LAN), and more resilient (offline-first architecture)—demonstrating why edge AI is becoming the norm for real-time IoT deployments.
 
+
 ## Reference Architecture — No Live Demo (By Design)
 
 This repository is a **deployable reference architecture**, not a hosted service. A production instance runs on private home hardware with real family members' biometric data. There is no public demo for the obvious reason: face recognition data belongs to real people, and sanitizing it for public consumption would defeat the entire point of building a privacy-first system.
@@ -155,7 +156,7 @@ The XIAO build requires `CONFIG_NN_ANSI_C=y` in `sdkconfig.xiao_peekaboo.default
 `esp-tflite-micro` is linked into all XIAO builds and its ONNX assembly kernels crash on PSRAM
 without this flag. See [docs/](docs/) for details.
 
-## Edge AI Trade-offs: A Real-World Lesson
+## Too Close to the (AI) Bleeding Edge
 
 **The original vision:** Run TFLite person detection directly on each ESP32-S3 to filter frames before uploading—true edge AI, minimal bandwidth, maximum privacy. Only send frames when a person is detected locally.
 
