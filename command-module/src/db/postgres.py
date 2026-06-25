@@ -1,7 +1,6 @@
-"""PostgreSQL async database using SQLAlchemy with Firestore-compatible API.
+"""PostgreSQL async database using SQLAlchemy.
 
-Provides get_db() and collection() interface that existing code uses,
-backed by PostgreSQL instead of Google Cloud Firestore.
+Provides get_db() and collection() interface used across the application.
 
 Models:
 - cameras: device registry
@@ -29,12 +28,12 @@ from sqlalchemy import (
     update as sql_update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, relationship, selectinload, sessionmaker
 from sqlalchemy import Column
 
 from config import settings
 
-# Collection name constants (for backward compatibility with Firestore code)
+# Collection name constants
 CAMERAS = "cameras"
 PERSONS = "persons"
 EVENTS = "events"
@@ -127,7 +126,7 @@ class SystemModel(Base):
 
     __tablename__ = "system"
 
-    id = Column(Integer, primary_key=True, autoincrement=False)
+    id = Column(String(50), primary_key=True)
     armed = Column(Boolean, default=False)
     schedule_enabled = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
@@ -154,22 +153,25 @@ class AuditLogModel(Base):
     details = Column(JSON, nullable=True)
 
 
-# ============================================================================
-# Firestore-compatible adapter layer
-# ============================================================================
-
-
 class DocumentSnapshot:
-    """Mimics Firestore DocumentSnapshot."""
 
     def __init__(self, model_obj):
         self._obj = model_obj
 
     def to_dict(self):
-        """Convert to dict."""
+        """Convert to dict, including any eagerly-loaded relationships."""
         if self._obj is None:
             return {}
-        return {c.name: getattr(self._obj, c.name, None) for c in self._obj.__table__.columns}
+        d = {c.name: getattr(self._obj, c.name, None) for c in self._obj.__table__.columns}
+        # Include relationship collections that were already loaded (e.g. via selectinload)
+        for rel_name in self._obj.__class__.__mapper__.relationships.keys():
+            loaded = self._obj.__dict__.get(rel_name)
+            if loaded is not None:
+                d[rel_name] = [
+                    {c.name: getattr(item, c.name, None) for c in item.__table__.columns}
+                    for item in loaded
+                ]
+        return d
 
     @property
     def exists(self):
@@ -188,7 +190,6 @@ class DocumentSnapshot:
 
 
 class DocumentReference:
-    """Mimics Firestore DocumentReference."""
 
     def __init__(self, session: AsyncSession, model_class, doc_id: str):
         self.session = session
@@ -216,9 +217,13 @@ class DocumentReference:
         """Get document."""
         pk_col = list(self.model_class.__table__.primary_key.columns)[0]
         pk_name = pk_col.name
-        result = await self.session.execute(
-            select(self.model_class).where(getattr(self.model_class, pk_name) == self.doc_id)
-        )
+        query = select(self.model_class).where(getattr(self.model_class, pk_name) == self.doc_id)
+
+        # Eagerly load relationships for models that have them
+        for rel_name in self.model_class.__mapper__.relationships.keys():
+            query = query.options(selectinload(getattr(self.model_class, rel_name)))
+
+        result = await self.session.execute(query)
         obj = result.scalar_one_or_none()
         return DocumentSnapshot(obj)
 
@@ -244,7 +249,6 @@ class DocumentReference:
 
 
 class CollectionReference:
-    """Mimics Firestore CollectionReference."""
 
     def __init__(self, session: AsyncSession, name: str):
         self.session = session
@@ -272,16 +276,25 @@ class CollectionReference:
                 col = getattr(self.model_class, f.field.field_path)
                 query = query.where(col == f.value)
 
+        # Eagerly load relationships for models that have them
+        for rel_name in self.model_class.__mapper__.relationships.keys():
+            query = query.options(selectinload(getattr(self.model_class, rel_name)))
+
         result = await self.session.execute(query)
         for obj in result.scalars().all():
             yield DocumentSnapshot(obj)
 
 
 class Database:
-    """Firestore-compatible database client."""
 
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.close()
 
     def collection(self, name: str) -> CollectionReference:
         """Get collection reference."""
@@ -311,12 +324,38 @@ async def init_postgres() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 
-def get_db() -> Database:
-    """Get database client (creates session on demand)."""
+async def get_db() -> Database:
+    """FastAPI dependency: yields a database client with automatic session cleanup.
+
+    Use in routes like: async def my_route(db: Database = Depends(get_db))
+    Session is automatically closed after the request completes.
+    """
     if _AsyncSessionLocal is None:
         raise RuntimeError("PostgreSQL not initialized — call init_postgres() at startup")
     session = _AsyncSessionLocal()
-    return Database(session)
+    try:
+        yield Database(session)
+    finally:
+        await session.close()
+
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def db_session():
+    """Async context manager for service-layer code that can't use FastAPI Depends.
+
+    Usage:
+        async with db_session() as db:
+            doc = await db.collection(PERSONS).document(id).get()
+    """
+    if _AsyncSessionLocal is None:
+        raise RuntimeError("PostgreSQL not initialized — call init_postgres() at startup")
+    session = _AsyncSessionLocal()
+    try:
+        yield Database(session)
+    finally:
+        await session.close()
 
 
 async def close_postgres() -> None:

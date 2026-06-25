@@ -1,6 +1,6 @@
 """
-Plain Python dataclasses that mirror the Firestore document shapes.
-No ORM — these are used for type safety and serialisation only.
+Plain Python dataclasses mirroring the database document shapes.
+No ORM — used for type safety and serialisation only.
 """
 from dataclasses import dataclass, field
 from datetime import datetime

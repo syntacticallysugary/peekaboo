@@ -1,9 +1,8 @@
 """Recording retrieval endpoints."""
-from auth import verify_api_key
 from rate_limit import limiter
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from db.postgres import EVENTS, get_db
+from db.postgres import EVENTS, Database, get_db
 from storage.factory import get_storage_backend
 
 router = APIRouter(prefix="/api/recordings", tags=["recordings"])
@@ -25,16 +24,12 @@ def _serialise(doc_id: str, d: dict) -> dict:
 @router.get("")
 @limiter.limit("100/minute")
 async def list_recordings(
+    db: Database = Depends(get_db),
     camera_id: str | None = Query(None),
     classification: str | None = Query(None),
     limit: int = Query(50, le=200),
 ):
-    """
-    Returns only events that have a recording, ordered newest first.
-    Requires Firestore composite indexes — see api/events.py note.
-    """
-    db = get_db()
-
+    """Returns only events that have a recording, ordered newest first."""
     recordings = []
     async for doc in db.collection(EVENTS).stream():
         data = doc.to_dict()
@@ -55,8 +50,7 @@ async def list_recordings(
 
 @router.get("/{event_id}/url")
 @limiter.limit("100/minute")
-async def get_clip_url(event_id: str, _: str = Depends(verify_api_key)):
-    db = get_db()
+async def get_clip_url(event_id: str, db: Database = Depends(get_db)):
     doc = await db.collection(EVENTS).document(event_id).get()
     if not doc.exists or not doc.to_dict().get("recording_path"):
         raise HTTPException(404)

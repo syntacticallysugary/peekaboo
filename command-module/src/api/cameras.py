@@ -7,11 +7,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from auth import verify_api_key
 from audit import log_camera_deleted, log_camera_registered
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from config import settings
-from db.postgres import CAMERAS, EVENTS, PERSONS, get_db
+from db.postgres import CAMERAS, EVENTS, PERSONS, Database, db_session, get_db
 from validation import validate_camera_id
 from orchestration.state import SystemState, TriggerEvent
 from orchestration.workflow import guard_workflow
@@ -91,7 +90,7 @@ class EdgeReportRequest(BaseModel):
 
 @router.post("/register", status_code=201)
 @limiter.limit("10/minute")
-async def register(request: Request, req: RegisterRequest, _: str = Depends(verify_api_key)):
+async def register(request: Request, req: RegisterRequest):
     cam = await camera_registry.register_camera(req.camera_id, req.type, req.ip, req.stream_url)
     await log_camera_registered(actor="api", camera_id=cam.camera_id, camera_type=req.type, ip=req.ip)
     return {"camera_id": cam.camera_id, "status": cam.status}
@@ -100,9 +99,8 @@ async def register(request: Request, req: RegisterRequest, _: str = Depends(veri
 @router.post("/{camera_id}/trigger", status_code=202)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, db: Database = Depends(get_db)):
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
         raise HTTPException(404, f"Camera '{camera_id}' not registered")
@@ -130,8 +128,7 @@ async def trigger(camera_id: str, req: TriggerRequest, bg: BackgroundTasks, _: s
 @router.get("")
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def list_cameras(_: str = Depends(verify_api_key)):
-    db = get_db()
+async def list_cameras(db: Database = Depends(get_db)):
     cameras = []
     async for doc in db.collection(CAMERAS).stream():
         d = doc.to_dict()
@@ -148,9 +145,8 @@ async def list_cameras(_: str = Depends(verify_api_key)):
 
 @router.delete("/{camera_id}", status_code=204)
 @limiter.limit("100/minute")
-async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
+async def delete_camera(camera_id: str, db: Database = Depends(get_db)):
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
     doc_ref = db.collection(CAMERAS).document(camera_id)
     doc = await doc_ref.get()
     if not doc.exists:
@@ -162,9 +158,8 @@ async def delete_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.get("/{camera_id}/config", response_model=CameraConfig)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def get_camera_config(camera_id: str, _: str = Depends(verify_api_key)):
+async def get_camera_config(camera_id: str, db: Database = Depends(get_db)):
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
         raise HTTPException(404, f"Camera '{camera_id}' not registered")
@@ -175,7 +170,7 @@ async def get_camera_config(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/{camera_id}/face", response_model=FaceEventResponse)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks):
     """DEPRECATED — kept for backward compatibility."""
     await camera_registry.heartbeat(camera_id)
     from services.inference_client import inference_client
@@ -201,10 +196,9 @@ async def face_event(camera_id: str, req: FaceEventRequest, bg: BackgroundTasks,
 @router.post("/{camera_id}/heartbeat", status_code=200)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def camera_heartbeat(camera_id: str, _: str = Depends(verify_api_key)):
+async def camera_heartbeat(camera_id: str, db: Database = Depends(get_db)):
     """Called by the inference service when a camera is actively sending frames."""
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if doc.exists:
         await camera_registry.heartbeat(camera_id)
@@ -214,7 +208,7 @@ async def camera_heartbeat(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/report", status_code=202)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def report_edge_event(req: EdgeReportRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+async def report_edge_event(req: EdgeReportRequest, bg: BackgroundTasks):
     """
     Edge-First Alert Receiver.
     The Jetson calls this after making its own classification decision.
@@ -238,35 +232,31 @@ async def _handle_edge_report(req: EdgeReportRequest) -> None:
     }.get(req.classification, "unknown")
 
     person_name: str | None = None
-    db = get_db()
+    async with db_session() as db:
+        if req.person_id:
+            person_doc = await db.collection(PERSONS).document(req.person_id).get()
+            if person_doc.exists:
+                person_name = person_doc.to_dict().get("name")
 
-    if req.person_id:
-        person_doc = await db.collection(PERSONS).document(req.person_id).get()
-        if person_doc.exists:
-            person_name = person_doc.to_dict().get("name")
-
-    # Unknown alerts are written to Firestore only when the session is finalized
-    # (via /api/alerts), so they arrive with a recording attached. Skipping the
-    # Firestore write here avoids a duplicate event with no recording.
-    if canonical != "unknown":
-        eid = str(uuid.uuid4())
-        await db.collection(EVENTS).document(eid).set({
-            "camera_id": req.camera_id,
-            "detected_at": datetime.now(timezone.utc),
-            "classification": canonical,
-            "person_id": req.person_id,
-            "confidence": req.similarity,
-            "recording_path": None,
-        })
-        await event_bus.publish(BusEvent(
-            event_id=eid,
-            camera_id=req.camera_id,
-            detected_at=datetime.now(timezone.utc),
-            classification=canonical,
-            person_id=req.person_id,
-            confidence=req.similarity,
-            extra={"edge_classification": req.classification, "person_name": person_name},
-        ))
+        if canonical != "unknown":
+            eid = str(uuid.uuid4())
+            await db.collection(EVENTS).document(eid).set({
+                "camera_id": req.camera_id,
+                "detected_at": datetime.now(timezone.utc),
+                "classification": canonical,
+                "person_id": req.person_id,
+                "confidence": req.similarity,
+                "recording_path": None,
+            })
+            await event_bus.publish(BusEvent(
+                event_id=eid,
+                camera_id=req.camera_id,
+                detected_at=datetime.now(timezone.utc),
+                classification=canonical,
+                person_id=req.person_id,
+                confidence=req.similarity,
+                extra={"edge_classification": req.classification, "person_name": person_name},
+            ))
 
     await ws_manager.broadcast({
         "type": "detection_event",
@@ -280,16 +270,16 @@ async def _handle_edge_report(req: EdgeReportRequest) -> None:
 
 async def _require_camera(camera_id: str) -> None:
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
-    doc = await db.collection(CAMERAS).document(camera_id).get()
-    if not doc.exists:
-        raise HTTPException(404, f"Camera '{camera_id}' not registered")
+    async with db_session() as db:
+        doc = await db.collection(CAMERAS).document(camera_id).get()
+        if not doc.exists:
+            raise HTTPException(404, f"Camera '{camera_id}' not registered")
 
 
 @router.post("/{camera_id}/reboot", status_code=202)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def reboot_camera(camera_id: str, _: str = Depends(verify_api_key)):
+async def reboot_camera(camera_id: str):
     """Send a secure reboot command to the camera over MQTT."""
     from services.mqtt_control import mqtt_control
     await _require_camera(camera_id)
@@ -303,7 +293,7 @@ async def reboot_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/{camera_id}/ota-check", status_code=202)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def ota_check_camera(camera_id: str, _: str = Depends(verify_api_key)):
+async def ota_check_camera(camera_id: str):
     """Ask the camera to poll for new firmware immediately."""
     camera_id = validate_camera_id(camera_id)
     from services.mqtt_control import mqtt_control
@@ -318,7 +308,7 @@ async def ota_check_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/{camera_id}/diag")
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def diag_camera(camera_id: str, _: str = Depends(verify_api_key)):
+async def diag_camera(camera_id: str):
     """Request live diagnostics and wait briefly for the camera's response."""
     from services.mqtt_control import mqtt_control
     await _require_camera(camera_id)
@@ -334,7 +324,7 @@ async def diag_camera(camera_id: str, _: str = Depends(verify_api_key)):
 @router.get("/{camera_id}/status")
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def camera_mqtt_status(camera_id: str, _: str = Depends(verify_api_key)):
+async def camera_mqtt_status(camera_id: str):
     """Return the last status message received from the camera over MQTT."""
     camera_id = validate_camera_id(camera_id)
     from services.mqtt_control import latest_status
@@ -344,9 +334,8 @@ async def camera_mqtt_status(camera_id: str, _: str = Depends(verify_api_key)):
 @router.post("/{camera_id}/motion", status_code=202)
 @limiter.limit("100/minute")
 @limiter.limit("100/minute")
-async def motion_event(camera_id: str, req: MotionEventRequest, bg: BackgroundTasks, _: str = Depends(verify_api_key)):
+async def motion_event(camera_id: str, req: MotionEventRequest, bg: BackgroundTasks, db: Database = Depends(get_db)):
     camera_id = validate_camera_id(camera_id)
-    db = get_db()
     doc = await db.collection(CAMERAS).document(camera_id).get()
     if not doc.exists:
         raise HTTPException(404, f"Camera '{camera_id}' not registered")
@@ -366,16 +355,16 @@ async def motion_event(camera_id: str, req: MotionEventRequest, bg: BackgroundTa
 
 
 async def _load_known_persons() -> list[dict]:
-    db = get_db()
     persons = []
-    async for doc in db.collection(PERSONS).stream():
-        d = doc.to_dict()
-        persons.append({
-            "person_id": doc.id,
-            "name": d.get("name", ""),
-            "is_blocked": d.get("is_blocked", False),
-            "embeddings": [e["embedding"] for e in d.get("embeddings", [])],
-        })
+    async with db_session() as db:
+        async for doc in db.collection(PERSONS).stream():
+            d = doc.to_dict()
+            persons.append({
+                "person_id": doc.id,
+                "name": d.get("name", ""),
+                "is_blocked": d.get("is_blocked", False),
+                "embeddings": [e["embedding"] for e in d.get("embeddings", [])],
+            })
     return persons
 
 

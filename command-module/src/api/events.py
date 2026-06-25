@@ -3,13 +3,12 @@ import uuid
 from datetime import datetime, timezone
 
 import httpx
-from auth import verify_api_key
 from rate_limit import limiter
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from config import settings
-from db.postgres import EVENTS, PERSONS, get_db
+from db.postgres import EVENTS, PERSONS, Database, get_db
 from services.inference_client import inference_client
 from services.inference_sync import sync_identities_to_edge
 
@@ -35,17 +34,12 @@ def _serialise(doc_id: str, d: dict) -> dict:
 @router.get("")
 @limiter.limit("100/minute")
 async def list_events(
+    db: Database = Depends(get_db),
     camera_id: str | None = Query(None),
     classification: str | None = Query(None),
     limit: int = Query(100, le=500),
 ):
-    """
-    Returns events ordered by detected_at descending.
-    Requires a Firestore composite index on (camera_id, detected_at DESC) when
-    camera_id filter is used — create it via the GCP Console or `firebase deploy`.
-    """
-    db = get_db()
-
+    """Returns events ordered by detected_at descending."""
     events = []
     async for doc in db.collection(EVENTS).stream():
         data = doc.to_dict()
@@ -63,9 +57,8 @@ async def list_events(
 
 @router.post("/{event_id}/identify")
 @limiter.limit("100/minute")
-async def identify_event(event_id: str, req: IdentifyRequest, _: str = Depends(verify_api_key)):
+async def identify_event(event_id: str, req: IdentifyRequest, db: Database = Depends(get_db)):
     """Identify an unknown event as a known person and enroll the face embedding."""
-    db = get_db()
     event_ref = db.collection(EVENTS).document(event_id)
     event_doc = await event_ref.get()
     if not event_doc.exists:

@@ -112,7 +112,7 @@ This project showcases real-world IoT architecture patterns:
 | Command Module | R5 (`192.168.1.105`) | `8081` | FastAPI; `network_mode: host` |
 | Inference Service | Jetson (`192.168.1.108`) | `8001` | FastAPI + InsightFace; NVIDIA runtime |
 | Person Detector | Jetson (`192.168.1.108`) | `8002` | YOLOv8n ONNX; CPU-only sidecar |
-| PostgreSQL | R5 | `5432` | Person embeddings, audit logs, events, webhooks |
+| PostgreSQL | R5 | `5435` | Person embeddings, audit logs, events, webhooks |
 | Mosquitto MQTT | R5 | `8883` (TLS/LAN), `1883` (loopback) | Cameras connect via TLS on 8883 |
 
 ## Repository Layout
@@ -128,7 +128,7 @@ PI/
 │   │   ├── db/          # SQLAlchemy models and database helpers
 │   │   ├── storage/     # local / S3 storage backend abstraction
 │   │   └── websocket/   # WebSocket dashboard event stream
-│   └── frontend/        # React dashboard
+│   └── frontend/        # Vue.js dashboard
 ├── inference-service/   # FastAPI app — person detection + face recognition (Jetson)
 │   ├── src/             # Inference service: session management, InsightFace, alerts
 │   └── person-detector/ # YOLOv8n ONNX person presence detector (separate process)
@@ -365,7 +365,7 @@ The test suite covers:
 - **Integration tests** — Full API flows (camera registration, person enrollment, firmware upload)
 
 Mock patterns:
-- Firestore queries mocked with in-memory dictionaries
+- Database queries mocked with in-memory dictionaries
 - MQTT publish calls captured and verified
 - External service calls (inference, webhooks) stubbed
 
@@ -411,9 +411,9 @@ Mock patterns:
 Peekaboo Intelligence implements security at every layer:
 
 ### Authentication & Authorization
-- **API Key authentication** — All endpoints require Bearer token (see [config.py](command-module/src/config.py))
+- **Network-layer trust** — API is LAN/VPN-only; no public exposure; no per-request auth tokens
 - **Per-device MQTT credentials** — Each camera has unique username/password; see [docs/MQTT_SETUP.md](docs/MQTT_SETUP.md)
-- **Audit logging** — All state-changing actions (camera registration, person enrollment, firmware upload, arm/disarm) logged to Firestore with timestamp, actor, and result; see [docs/AUDIT_LOGGING.md](docs/AUDIT_LOGGING.md)
+- **Audit logging** — All state-changing actions (camera registration, person enrollment, firmware upload, arm/disarm) logged to PostgreSQL with timestamp, actor, and result; see [docs/AUDIT_LOGGING.md](docs/AUDIT_LOGGING.md)
 
 ### Input Validation
 - **Format validation** — Camera IDs, channel names, person IDs matched against strict regex patterns
@@ -434,7 +434,7 @@ Peekaboo Intelligence implements security at every layer:
 ### Privacy
 - **Local-only inference** — Raw video frames never leave the LAN; only metadata (detections, alerts) exit
 - **No cloud dependency** — System operates completely offline if needed; no third-party API keys or data transmission
-- **Encrypted storage** — Person embeddings and recordings encrypted at rest in Firestore
+- **Local storage** — Person embeddings stored in local PostgreSQL; recordings on local disk; no third-party data custody
 
 ---
 

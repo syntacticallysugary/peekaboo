@@ -6,7 +6,7 @@ event, webhook delivery, and dashboard notification.
 """
 import logging
 
-from db.postgres import SYSTEM, get_db
+from db.postgres import SYSTEM, db_session
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +16,10 @@ _armed: bool = True
 
 async def load() -> None:
     global _armed
-    db = get_db()
-    doc = await db.collection(SYSTEM).document(_DOC_ID).get()
-    if doc.exists:
-        _armed = doc.to_dict().get("armed", True)
+    async with db_session() as db:
+        doc = await db.collection(SYSTEM).document(_DOC_ID).get()
+        if doc.exists:
+            _armed = doc.to_dict().get("armed", True)
     logger.info("System state loaded — armed=%s", _armed)
 
 
@@ -30,6 +30,6 @@ def is_armed() -> bool:
 async def set_armed(value: bool) -> None:
     global _armed
     _armed = value
-    db = get_db()
-    await db.collection(SYSTEM).document(_DOC_ID).set({"armed": value})
+    async with db_session() as db:
+        await db.collection(SYSTEM).document(_DOC_ID).set({"armed": value})
     logger.info("System %s", "armed" if value else "disarmed")

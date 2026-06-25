@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timezone
 
 from config import settings
-from db.postgres import CAMERAS, get_db
+from db.postgres import CAMERAS, db_session
 from db.models import Camera
 from websocket.manager import ws_manager
 
@@ -19,7 +19,6 @@ _stop_event = asyncio.Event()
 async def register_camera(
     camera_id: str, camera_type: str, ip: str | None, stream_url: str | None
 ) -> Camera:
-    db = get_db()
     now = datetime.now(timezone.utc)
     data = {
         "type": camera_type,
@@ -28,7 +27,8 @@ async def register_camera(
         "last_seen": now,
         "status": "connected",
     }
-    await db.collection(CAMERAS).document(camera_id).set(data)
+    async with db_session() as db:
+        await db.collection(CAMERAS).document(camera_id).set(data)
 
     await ws_manager.broadcast({"type": "camera_status", "camera_id": camera_id, "status": "connected"})
     logger.info("Camera registered: %s (%s)", camera_id, camera_type)
@@ -44,11 +44,11 @@ async def register_camera(
 
 
 async def heartbeat(camera_id: str) -> None:
-    db = get_db()
-    await db.collection(CAMERAS).document(camera_id).update({
-        "last_seen": datetime.now(timezone.utc),
-        "status": "connected",
-    })
+    async with db_session() as db:
+        await db.collection(CAMERAS).document(camera_id).update({
+            "last_seen": datetime.now(timezone.utc),
+            "status": "connected",
+        })
 
 
 async def _health_loop() -> None:
@@ -56,30 +56,27 @@ async def _health_loop() -> None:
     while not _stop_event.is_set():
         await asyncio.sleep(10)
         now = datetime.now(timezone.utc)
-        db = get_db()
+        async with db_session() as db:
+            async for doc in db.collection(CAMERAS).stream():
+                data = doc.to_dict()
+                status = data.get("status")
+                if status != "connected":
+                    continue
 
-        # Get all cameras and check status
-        async for doc in db.collection(CAMERAS).stream():
-            data = doc.to_dict()
-            status = data.get("status")
-            if status != "connected":
-                continue
-
-            last_seen = data.get("last_seen")
-            if last_seen is None:
-                continue
-            # Ensure timezone-aware
-            if last_seen.tzinfo is None:
-                last_seen = last_seen.replace(tzinfo=timezone.utc)
-            age = (now - last_seen).total_seconds()
-            if age > timeout:
-                await db.collection(CAMERAS).document(doc.id).update({"status": "disconnected"})
-                logger.warning("Camera %s timed out (last seen %.0fs ago)", doc.id, age)
-                await ws_manager.broadcast({
-                    "type": "camera_status",
-                    "camera_id": doc.id,
-                    "status": "disconnected",
-                })
+                last_seen = data.get("last_seen")
+                if last_seen is None:
+                    continue
+                if last_seen.tzinfo is None:
+                    last_seen = last_seen.replace(tzinfo=timezone.utc)
+                age = (now - last_seen).total_seconds()
+                if age > timeout:
+                    await db.collection(CAMERAS).document(doc.id).update({"status": "disconnected"})
+                    logger.warning("Camera %s timed out (last seen %.0fs ago)", doc.id, age)
+                    await ws_manager.broadcast({
+                        "type": "camera_status",
+                        "camera_id": doc.id,
+                        "status": "disconnected",
+                    })
 
 
 def start() -> asyncio.Task:

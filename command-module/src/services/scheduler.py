@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from db.postgres import SYSTEM, get_db
+from db.postgres import SYSTEM, db_session
 from services import system_state
 from services.inference_client import inference_client
 from websocket.manager import ws_manager
@@ -24,10 +24,10 @@ _config: dict = {"enabled": False, "arm_time": None, "disarm_time": None}
 
 async def load() -> None:
     global _config
-    db = get_db()
-    doc = await db.collection(SYSTEM).document(_DOC_ID).get()
-    if doc.exists:
-        _config.update(doc.to_dict())
+    async with db_session() as db:
+        doc = await db.collection(SYSTEM).document(_DOC_ID).get()
+        if doc.exists:
+            _config.update(doc.to_dict())
     logger.info("Schedule loaded — %s", _config)
 
 
@@ -38,8 +38,8 @@ def get_config() -> dict:
 async def set_config(enabled: bool, arm_time: str | None, disarm_time: str | None) -> None:
     global _config
     _config = {"enabled": enabled, "arm_time": arm_time, "disarm_time": disarm_time}
-    db = get_db()
-    await db.collection(SYSTEM).document(_DOC_ID).set(_config)
+    async with db_session() as db:
+        await db.collection(SYSTEM).document(_DOC_ID).set(_config)
     logger.info("Schedule updated — %s", _config)
 
 

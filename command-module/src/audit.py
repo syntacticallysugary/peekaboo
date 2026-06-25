@@ -13,7 +13,7 @@ import logging
 from datetime import datetime, timezone
 from enum import Enum
 
-from db.postgres import get_db
+from db.postgres import db_session
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,6 @@ async def log_audit_event(
         None (errors are logged but don't raise)
     """
     try:
-        db = get_db()
         doc_data = {
             "timestamp": datetime.now(timezone.utc),
             "event_type": event_type.value,
@@ -89,9 +88,8 @@ async def log_audit_event(
             "error_reason": error_reason,
             "details": details or {},
         }
-
-        # Insert into audit_logs table (auto-generates ID)
-        await db.collection(AUDIT_COLLECTION).add(doc_data)
+        async with db_session() as db:
+            await db.collection(AUDIT_COLLECTION).add(doc_data)
 
     except Exception as exc:
         logger.error("Failed to write audit log: %s", exc, exc_info=True)

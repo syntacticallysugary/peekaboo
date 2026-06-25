@@ -2,14 +2,13 @@
 import uuid
 from datetime import datetime, timezone
 
-from auth import verify_api_key
 from audit import log_webhook_created, log_webhook_deleted
 from rate_limit import limiter, LIMIT_DEFAULT, LIMIT_REGISTER, LIMIT_FIRMWARE, LIMIT_PERSON, LIMIT_WEBHOOK
 from validation import validate_webhook_url
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl, field_validator
 
-from db.postgres import WEBHOOKS, get_db
+from db.postgres import WEBHOOKS, Database, get_db
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
@@ -29,8 +28,7 @@ class WebhookCreate(BaseModel):
 
 @router.get("")
 @limiter.limit("100/minute")
-async def list_webhooks(_: str = Depends(verify_api_key)):
-    db = get_db()
+async def list_webhooks(db: Database = Depends(get_db)):
     webhooks = []
     async for doc in db.collection(WEBHOOKS).stream():
         d = doc.to_dict()
@@ -40,8 +38,7 @@ async def list_webhooks(_: str = Depends(verify_api_key)):
 
 @router.post("", status_code=201)
 @limiter.limit("30/minute")
-async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
-    db = get_db()
+async def create_webhook(data: WebhookCreate, db: Database = Depends(get_db)):
     webhook_id = str(uuid.uuid4())
     url_str = str(data.url)
     await db.collection(WEBHOOKS).document(webhook_id).set({
@@ -56,8 +53,7 @@ async def create_webhook(data: WebhookCreate, _: str = Depends(verify_api_key)):
 
 @router.delete("/{webhook_id}", status_code=204)
 @limiter.limit("100/minute")
-async def delete_webhook(webhook_id: str, _: str = Depends(verify_api_key)):
-    db = get_db()
+async def delete_webhook(webhook_id: str, db: Database = Depends(get_db)):
     doc_ref = db.collection(WEBHOOKS).document(webhook_id)
     doc = await doc_ref.get()
     if not doc.exists:

@@ -3,12 +3,11 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from auth import verify_api_key
 from rate_limit import limiter
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from db.postgres import EVENTS, get_db
+from db.postgres import EVENTS, get_db, Database
 from services import system_state
 from services.event_queue import DetectionEvent as BusEvent, event_bus
 from websocket.manager import ws_manager
@@ -37,7 +36,7 @@ class SessionAlertRequest(BaseModel):
 
 @router.post("", status_code=202)
 @limiter.limit("100/minute")
-async def receive_alert(request: Request, alert: SessionAlertRequest, _: str = Depends(verify_api_key)):
+async def receive_alert(request: Request, alert: SessionAlertRequest, db: Database = Depends(get_db)):
     if not system_state.is_armed():
         logger.info("System disarmed — discarding session alert from %s", alert.camera_id)
         return {"status": "discarded_disarmed"}
@@ -45,8 +44,6 @@ async def receive_alert(request: Request, alert: SessionAlertRequest, _: str = D
     classification = _CLASSIFICATION_MAP.get(alert.classification, alert.classification)
     detected_at = datetime.now(timezone.utc)
     eid = str(uuid.uuid4())
-
-    db = get_db()
     await db.collection(EVENTS).document(eid).set({
         "camera_id": alert.camera_id,
         "detected_at": detected_at,

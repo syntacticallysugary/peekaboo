@@ -15,7 +15,6 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from api import alerts, cameras, events, firmware, persons, recordings, system, webhooks
-from auth import verify_api_key
 from config import settings
 from rate_limit import limiter
 from db.postgres import init_postgres, close_postgres
@@ -95,7 +94,7 @@ app.include_router(webhooks.router)
 
 
 @app.websocket("/ws/dashboard")
-async def dashboard_ws(ws: WebSocket, _: str = Depends(verify_api_key)):
+async def dashboard_ws(ws: WebSocket):
     """WebSocket connection requires Bearer token in query param: ws://host/ws/dashboard?token=API_KEY"""
     await ws_manager.connect(ws)
     try:

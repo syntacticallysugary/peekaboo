@@ -8,7 +8,7 @@ from fastapi import HTTPException
 # Format validation patterns
 CAMERA_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9\-_]{0,48}[a-z0-9]$", re.IGNORECASE)
 CHANNEL_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_]{0,19}$", re.IGNORECASE)
-PERSON_ID_PATTERN = re.compile(r"^[a-z0-9]{8,}$", re.IGNORECASE)  # Firestore doc IDs
+PERSON_ID_PATTERN = re.compile(r"^[a-z0-9]{8,}$", re.IGNORECASE)
 
 # Size limits (bytes)
 MAX_JPEG_SIZE = 5 * 1024 * 1024  # 5 MB
@@ -57,7 +57,7 @@ def validate_channel(channel: str) -> str:
 
 
 def validate_person_id(person_id: str) -> str:
-    """Validate person ID format (Firestore document ID).
+    """Validate person ID format.
 
     Raises:
         HTTPException: 400 if invalid format.
@@ -69,7 +69,6 @@ def validate_person_id(person_id: str) -> str:
         raise HTTPException(400, "person_id cannot be empty")
     if len(person_id) > 1024:
         raise HTTPException(400, "person_id too long")
-    # Firestore allows most characters, but we'll be more restrictive for safety
     if not PERSON_ID_PATTERN.match(person_id):
         raise HTTPException(400, "person_id format invalid")
     return person_id

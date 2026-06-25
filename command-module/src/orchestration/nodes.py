@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import httpx
 
 from config import settings
-from db.postgres import EVENTS, get_db
+from db.postgres import EVENTS, db_session
 from orchestration.state import SystemState
 from services.event_queue import DetectionEvent as BusEvent, event_bus
 from services.inference_client import inference_client
@@ -168,7 +168,6 @@ async def persist_event_node(state: SystemState) -> SystemState:
     match = state.get("recognition_match")
     eid = str(uuid.uuid4())
 
-    db = get_db()
     event_data = {
         "camera_id": camera_id,
         "detected_at": datetime.now(timezone.utc),
@@ -177,7 +176,8 @@ async def persist_event_node(state: SystemState) -> SystemState:
         "confidence": match["similarity"] if match else None,
         "recording_path": state.get("recording_path"),
     }
-    await db.collection(EVENTS).document(eid).set(event_data)
+    async with db_session() as db:
+        await db.collection(EVENTS).document(eid).set(event_data)
 
     bus_event = BusEvent(
         event_id=eid,
