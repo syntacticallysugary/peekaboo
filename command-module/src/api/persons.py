@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from config import settings
-from db.postgres import PERSONS, Database, get_db
+from db.postgres import PERSONS, EmbeddingModel, Database, get_db
 from services.inference_client import inference_client
 from services.inference_sync import sync_identities_to_edge
 
@@ -101,17 +101,14 @@ async def add_face_image(person_id: str, image: UploadFile = File(...), db: Data
         raise HTTPException(422, "Face detected but no embedding returned")
 
     embedding_id = str(uuid.uuid4())
-    new_entry = {
-        "embedding_id": embedding_id,
-        "embedding": embedding,
-        "source_image": image.filename,
-        "created_at": datetime.now(timezone.utc),
-    }
-
-    current = doc.to_dict()
-    embeddings = current.get("embeddings", [])
-    embeddings.append(new_entry)
-    await doc_ref.update({"embeddings": embeddings})
+    db.session.add(EmbeddingModel(
+        embedding_id=embedding_id,
+        person_id=person_id,
+        embedding=embedding,
+        source_image=image.filename,
+        created_at=datetime.now(timezone.utc),
+    ))
+    await db.session.commit()
 
     await sync_identities_to_edge()
     return {"embedding_id": embedding_id, "person_id": person_id}
@@ -173,17 +170,14 @@ async def capture_face(person_id: str, db: Database = Depends(get_db)):
         raise HTTPException(408, "No face captured within 30 seconds — walk in front of the camera and try again")
 
     embedding_id = str(uuid.uuid4())
-    new_entry = {
-        "embedding_id": embedding_id,
-        "embedding": embedding,
-        "source_image": "live_capture",
-        "created_at": datetime.now(timezone.utc),
-    }
-
-    current = doc.to_dict()
-    embeddings = current.get("embeddings", [])
-    embeddings.append(new_entry)
-    await doc_ref.update({"embeddings": embeddings})
+    db.session.add(EmbeddingModel(
+        embedding_id=embedding_id,
+        person_id=person_id,
+        embedding=embedding,
+        source_image="live_capture",
+        created_at=datetime.now(timezone.utc),
+    ))
+    await db.session.commit()
 
     await sync_identities_to_edge()
     logger.info("Enrolled %s via live capture", doc.to_dict().get("name"))
@@ -216,13 +210,14 @@ async def auto_enroll_face(person_id: str, payload: AutoEnrollPayload, db: Datab
         return {"added": False, "nearest_similarity": nearest_sim}
 
     embedding_id = str(uuid.uuid4())
-    embeddings.append({
-        "embedding_id": embedding_id,
-        "embedding": payload.embedding,
-        "source_image": f"auto:{payload.camera_id}",
-        "created_at": datetime.now(timezone.utc),
-    })
-    await doc_ref.update({"embeddings": embeddings})
+    db.session.add(EmbeddingModel(
+        embedding_id=embedding_id,
+        person_id=person_id,
+        embedding=payload.embedding,
+        source_image=f"auto:{payload.camera_id}",
+        created_at=datetime.now(timezone.utc),
+    ))
+    await db.session.commit()
     await sync_identities_to_edge()
 
     logger.info("Auto-enrolled embedding for %s from %s (nearest_sim=%.3f)", person_id, payload.camera_id, nearest_sim)

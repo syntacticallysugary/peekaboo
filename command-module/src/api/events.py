@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from config import settings
-from db.postgres import EVENTS, PERSONS, Database, get_db
+from db.postgres import EVENTS, PERSONS, EmbeddingModel, Database, get_db
 from services.inference_client import inference_client
 from services.inference_sync import sync_identities_to_edge
 
@@ -96,14 +96,14 @@ async def identify_event(event_id: str, req: IdentifyRequest, db: Database = Dep
         raise HTTPException(422, "Face detected but no embedding returned")
 
     embedding_id = str(uuid.uuid4())
-    embeddings = person_doc.to_dict().get("embeddings", [])
-    embeddings.append({
-        "embedding_id": embedding_id,
-        "embedding": embedding,
-        "source_image": f"event:{event_id}",
-        "created_at": datetime.now(timezone.utc),
-    })
-    await person_ref.update({"embeddings": embeddings})
+    db.session.add(EmbeddingModel(
+        embedding_id=embedding_id,
+        person_id=req.person_id,
+        embedding=embedding,
+        source_image=f"event:{event_id}",
+        created_at=datetime.now(timezone.utc),
+    ))
+    await db.session.commit()
 
     await event_ref.update({
         "classification": "known",
