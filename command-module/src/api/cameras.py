@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -230,6 +230,15 @@ async def _handle_edge_report(req: EdgeReportRequest) -> None:
         "false_alarm": "known",
         "arrival": "known",
     }.get(req.classification, "unknown")
+
+    if canonical == "known":
+        cooldown_until = _system_state["cooldowns"].get("known_person")
+        if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
+            logger.debug("Known person cooldown active — edge report from %s suppressed", req.camera_id)
+            return
+        _system_state["cooldowns"]["known_person"] = (
+            datetime.now(timezone.utc) + timedelta(seconds=settings.known_person_cooldown_s)
+        )
 
     person_name: str | None = None
     async with db_session() as db:
