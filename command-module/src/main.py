@@ -1,12 +1,13 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import httpx as _httpx
 
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from fastapi.security import HTTPBearer
@@ -148,10 +149,18 @@ async def proxy_snapshot(camera_id: str):
     return Response(content=resp.content, media_type="image/jpeg")
 
 
-try:
-    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
-except Exception:
-    pass
+_FRONTEND = Path("frontend/dist")
+if (_FRONTEND / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=str(_FRONTEND / "assets")), name="assets")
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_fallback(full_path: str):
+    candidate = _FRONTEND / full_path
+    if candidate.is_file():
+        return FileResponse(candidate)
+    index = _FRONTEND / "index.html"
+    if index.exists():
+        return FileResponse(index)
 
 
 if __name__ == "__main__":
